@@ -1,0 +1,1 @@
+# Azure function for Streaming Data to Timescale DB

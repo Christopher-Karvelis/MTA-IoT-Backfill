@@ -1,0 +1,12 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "myblob",
+      "type": "blobTrigger",
+      "direction": "in",
+      "path": "redhatvms/2022-07-01/07/{name}",
+      "connection": "axh4lab4streaming4sa_STORAGE"
+    }
+  ]
+}
