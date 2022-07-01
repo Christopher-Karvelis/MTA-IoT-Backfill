@@ -5,8 +5,8 @@
       "name": "myblob",
       "type": "blobTrigger",
       "direction": "in",
-      "path": "redhatvms/2022-07-01/07/{name}",
-      "connection": "axh4lab4streaming4sa_STORAGE"
+      "path": "redhatvms/2022-07-01/09/{name}",
+      "connection": "AzureWebJobsStorage"
     }
   ]
 }
