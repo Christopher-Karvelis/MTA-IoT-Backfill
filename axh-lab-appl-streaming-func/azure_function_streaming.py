@@ -43,6 +43,7 @@ class AzureFunctionStreaming:
                     )
                 )
             except:
+                # TODO --> send message to HTD. 
                 pass 
 
         # upload
