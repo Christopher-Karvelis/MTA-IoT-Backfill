@@ -11,4 +11,4 @@ RUN apt-get update && apt-get -y install libpq-dev gcc && pip install psycopg2
  
 RUN pip install -r /code/requirements.txt 
 
-COPY ./* /home/site/wwwroot
+COPY ./* /home/site/wwwroot/
