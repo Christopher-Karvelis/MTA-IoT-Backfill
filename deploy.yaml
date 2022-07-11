@@ -23,7 +23,7 @@ pool:
       displayName: Use Python 3.8
       inputs:
         versionSpec: 3.8
-    
+
     - task: Docker@2
       displayName: Build
       inputs:
@@ -38,7 +38,7 @@ pool:
         DOCKER_BUILDKIT: 1
         PAT: $(pat)
 
-      - task: Docker@2
+    - task: Docker@2
       displayName: Push
       inputs:
         command: push
