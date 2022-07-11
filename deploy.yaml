@@ -1,0 +1,50 @@
+variables:
+- name: vmImageName
+  value: 'ubuntu-latest'
+- name: dockerImageName
+  value: axh-lab-appl-streaming-func
+- name: TAG
+  value: '$(Build.SourceVersion)'  
+- name: dockerRegistryServiceConnection
+  value: axh4lab4appl4streaming4acr
+
+pool:
+  vmImage: $(vmImageName)
+
+
+- stage: Build
+  dependsOn: [] 
+  displayName: Build
+  jobs:
+  - job: Build
+    displayName: Build
+
+    steps:
+    - task: UsePythonVersion@0
+      displayName: Use Python 3.8
+      inputs:
+        versionSpec: 3.8
+    
+    - task: Docker@2
+      displayName: Build
+      inputs:
+        command: build
+        repository: $(dockerImageName)
+        tags: |
+          $(TAG)
+          latest
+        arguments: --secret id=pat,env=PAT
+        containerRegistry: $(dockerRegistryServiceConnection)
+      env:
+        DOCKER_BUILDKIT: 1
+        PAT: $(pat)
+
+      - task: Docker@2
+      displayName: Push
+      inputs:
+        command: push
+        repository: $(dockerImageName)
+        tags: |
+          $(TAG)
+          latest
+        containerRegistry: $(dockerRegistryServiceConnection)
