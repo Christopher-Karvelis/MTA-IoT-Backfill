@@ -10,11 +10,8 @@ RUN pip install --upgrade pip
 RUN apt-get update
 RUN apt-get upgrade -y
 
-# this is here to make sure we can compile c++ when using pip install
-RUN apt-get install gcc python3-dev python3-pip libxml2-dev libxslt1-dev zlib1g-dev g++ -y
-
-# cannot install pyodbc without this installed
-RUN apt-get install unixodbc-dev -y
+# For psycopg2
+RUN apk add build-base
  
 RUN pip install -r /code/requirements.txt 
 
