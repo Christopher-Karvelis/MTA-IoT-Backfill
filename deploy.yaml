@@ -8,7 +8,7 @@ variables:
 - name: dockerRegistryServiceConnection
   value: axh4lab4appl4streaming4acr
 
-pool:
+- pool:
   vmImage: $(vmImageName)
 
 - stage: Build
