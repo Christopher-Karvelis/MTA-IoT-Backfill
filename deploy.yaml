@@ -102,7 +102,7 @@ stages:
               "name": "AZURE_CONTAINER_NAME",
               "value": "missing-sensors", 
               "slotSetting": false
-            },
+            }
           ]
 
     - task: AzureFunctionAppContainer@1
