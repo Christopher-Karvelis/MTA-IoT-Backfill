@@ -1,4 +1,5 @@
 variables:
+- group: 'axh-lab'
 - name: vmImageName
   value: 'ubuntu-latest'
 - name: dockerImageName
