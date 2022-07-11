@@ -29,7 +29,7 @@ class AzureFunctionStreaming:
         self.undefined_sensors = pd.DataFrame(columns=[['SensorName', 'Plant']])
         self.myTeamsMessage = pymsteams.connectorcard(os.getenv("TEAMS_URL"))
         self.myTeamsMessage.addLinkButton("Check this container for missing sensors", os.getenv("LINK_TO_STORAGE_ACCOUNT"))
-        connection_string = os.getenv("AZURE_STORAGE_CONNECTIONSTRING")
+        connection_string = os.getenv("AzureWebJobsStorage")
         self.blob_service_client = BlobServiceClient.from_connection_string(connection_string)
         self.blob_client = self.blob_service_client.get_blob_client(container=os.getenv("AZURE_CONTAINER_NAME"), blob=f"missing-sensors-{date.today().strftime('%Y-%m-%d')}.csv")
 
