@@ -7,11 +7,7 @@ COPY ./requirements.txt /code/requirements.txt
 
 RUN pip install --upgrade pip
 
-RUN apt-get update
-RUN apt-get upgrade -y
-
-# For psycopg2
-RUN apk add build-base
+RUN apt-get update && apt-get -y install libpq-dev gcc && pip install psycopg2
  
 RUN pip install -r /code/requirements.txt 
 
