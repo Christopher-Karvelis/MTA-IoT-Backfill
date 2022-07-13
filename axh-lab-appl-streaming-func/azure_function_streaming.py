@@ -1,4 +1,3 @@
-from cmath import log
 import logging
 import json
 import azure.functions as func
@@ -13,6 +12,11 @@ from datetime import date
 from .timescale_client import TimescaleClient
 
 load_dotenv()
+
+# Set the logging level for all azure-* libraries
+logger = logging.getLogger('azure')
+logger.setLevel(logging.ERROR)
+logger.setLevel(logging.INFO)
 
 
 class AzureFunctionStreaming:
@@ -42,7 +46,7 @@ class AzureFunctionStreaming:
 
 
     async def input(self, myblob: func.InputStream):
-        logging.info(f"Name: {myblob.name}  "
+        logger.info(f"Name: {myblob.name}  "
                     f"Blob Size: {myblob.length} bytes  ")
         
         jsonData=json.load(myblob)
@@ -61,8 +65,8 @@ class AzureFunctionStreaming:
                 try:
                     self.undefined_sensors.loc[hash(entry["NodeId"].partition(';s=')[2]+entry["DisplayName"].partition("_")[0])]
                 except:
-                    logging.info(f"Missing Sensor coming from OPC: {entry['NodeId'].partition(';s=')[2]}")
-                    logging.info(f"Number of undefined Sensors coming from OPC: {self.undefined_sensors.shape[0]}")
+                    logger.info(f"Missing Sensor coming from OPC: {entry['NodeId'].partition(';s=')[2]}")
+                    logger.info(f"Number of undefined Sensors coming from OPC: {self.undefined_sensors.shape[0]}")
                     self.undefined_sensors.loc[hash(entry["NodeId"].partition(';s=')[2]+entry["DisplayName"].partition("_")[0])] = [
                         entry["NodeId"].partition(';s=')[2], 
                         entry["DisplayName"].partition("_")[0]
@@ -78,7 +82,7 @@ class AzureFunctionStreaming:
         try: 
             self.mgr.copy(values)
             self.conn.commit()
-            logging.info(f"Uploading blob {myblob.name} was successful")
+            logger.info(f"Uploading blob {myblob.name} was successful")
 
         except:
             try:
@@ -86,7 +90,7 @@ class AzureFunctionStreaming:
                 self.mgr.copy(values)
                 self.conn.commit()
             except Exception as err:
-                logging.error(f"Exception occured during upload {err.message}")
+                logger.error(f"Exception occured during upload {err.message}")
 
 
 
