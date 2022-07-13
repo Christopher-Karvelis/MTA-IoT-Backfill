@@ -65,13 +65,16 @@ class AzureFunctionStreaming:
                 try:
                     self.undefined_sensors.loc[hash(entry["NodeId"].partition(';s=')[2]+entry["DisplayName"].partition("_")[0])]
                 except:
-                    logger.info(f"Missing Sensor coming from OPC: {entry['NodeId'].partition(';s=')[2]}")
-                    logger.info(f"Number of undefined Sensors coming from OPC: {self.undefined_sensors.shape[0]}")
-                    self.undefined_sensors.loc[hash(entry["NodeId"].partition(';s=')[2]+entry["DisplayName"].partition("_")[0])] = [
-                        entry["NodeId"].partition(';s=')[2], 
-                        entry["DisplayName"].partition("_")[0]
-                    ]
-                    send_message = True
+                    if entry == 'events':
+                        pass
+                    else:
+                        logger.info(f"Missing Sensor coming from OPC: {entry['NodeId'].partition(';s=')[2]}")
+                        logger.info(f"Number of undefined Sensors coming from OPC: {self.undefined_sensors.shape[0]}")
+                        self.undefined_sensors.loc[hash(entry["NodeId"].partition(';s=')[2]+entry["DisplayName"].partition("_")[0])] = [
+                            entry["NodeId"].partition(';s=')[2], 
+                            entry["DisplayName"].partition("_")[0]
+                        ]
+                        send_message = True
 
         if send_message:
             self.blob_client.upload_blob(data=self.undefined_sensors.to_csv(), overwrite=True)
