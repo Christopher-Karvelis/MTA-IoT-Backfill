@@ -85,7 +85,7 @@ stages:
             },
             {
               "name": "TIMESCALE_HOST_URL",
-              "value": "axh-lab-appl-timescale-streaming-db-axpo-c52c.a.timescaledb.io", 
+              "value": "axh-lab-appl-timescale-db-big-axpo-c52c.a.timescaledb.io", 
               "slotSetting": false
             },
             {
@@ -95,7 +95,7 @@ stages:
             },
             {
               "name": "TIMESCALE_DATABASE_NAME",
-              "value": "iot_db", 
+              "value": "iot_db_big", 
               "slotSetting": false
             },
             {
