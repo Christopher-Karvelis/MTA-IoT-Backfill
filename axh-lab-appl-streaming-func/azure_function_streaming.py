@@ -47,6 +47,7 @@ class AzureFunctionStreaming:
         
         jsonData=json.load(myblob)
         values = []
+        send_message = False
         for entry in jsonData:
             try:
                 values.append(
@@ -66,15 +67,26 @@ class AzureFunctionStreaming:
                         entry["NodeId"].partition(';s=')[2], 
                         entry["DisplayName"].partition("_")[0]
                     ]
-                    self.blob_client.upload_blob(data=self.undefined_sensors.to_csv(), overwrite=True)
-                    self.myTeamsMessage.text(f"New missing sensor is added to missing-sensors-{date.today().strftime('%Y-%m-%d')}.csv")
-                    self.myTeamsMessage.send()
-                pass 
+                    send_message = True
 
+        if send_message:
+            self.blob_client.upload_blob(data=self.undefined_sensors.to_csv(), overwrite=True)
+            self.myTeamsMessage.text(f"New missing sensor is added to missing-sensors-{date.today().strftime('%Y-%m-%d')}.csv")
+            self.myTeamsMessage.send()
+            
         # upload
-        self.mgr.copy(values)
-        self.conn.commit()
-        logging.info(f"Uploading blob {myblob.name} was successful")
+        try: 
+            self.mgr.copy(values)
+            self.conn.commit()
+            logging.info(f"Uploading blob {myblob.name} was successful")
+
+        except:
+            try:
+                self.conn.rollback()
+                self.mgr.copy(values)
+                self.conn.commit()
+            except Exception as err:
+                logging.error(f"Exception occured during upload {err.message}")
 
 
 
