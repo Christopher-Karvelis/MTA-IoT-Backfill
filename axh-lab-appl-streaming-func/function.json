@@ -5,7 +5,7 @@
       "name": "myblob",
       "type": "blobTrigger",
       "direction": "in",
-      "path": "redhatvms/{name}",
+      "path": "redhatvms/2022-07-13/12/{name}",
       "connection": "AzureWebJobsStorage"
     }
   ]
