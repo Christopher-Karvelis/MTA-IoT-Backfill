@@ -3,6 +3,7 @@ import json
 import azure.functions as func
 import pandas as pd
 from pgcopy import CopyManager
+from psycopg2 import OperationalError
 import pymsteams
 import os
 import pandas as pd
@@ -41,7 +42,6 @@ class AzureFunctionStreaming:
         timescale_client = TimescaleClient()
         self.conn = timescale_client.get_connection()
         cols = ['ts', 'sensorid', 'measurementvalue']
-        self.cursor = self.conn.cursor()
         self.mgr = CopyManager(self.conn, 'measurements', cols)
 
 
@@ -82,11 +82,16 @@ class AzureFunctionStreaming:
             self.myTeamsMessage.send()
             
         # upload
+        try:
+            self.conn.isolation_level
+        except OperationalError as oe:
+            timescale_client = TimescaleClient()
+            self.conn = timescale_client.get_connection()
+            logger.info("New connection needs to be established")
         try: 
             self.mgr.copy(values)
             self.conn.commit()
             logger.info(f"Uploading blob {myblob.name} was successful")
-
         except:
             try:
                 self.conn.rollback()
