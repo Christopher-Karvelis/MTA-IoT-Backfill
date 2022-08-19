@@ -1,7 +1,6 @@
 import logging
 import json
 import azure.functions as func
-import pandas as pd
 from pgcopy import CopyManager
 from psycopg2 import OperationalError
 import pymsteams
@@ -10,7 +9,9 @@ import pandas as pd
 from azure.storage.blob import BlobServiceClient
 from dotenv import load_dotenv
 from datetime import date
+import requests
 from .timescale_client import TimescaleClient
+from keycloak.keycloak_openid import KeycloakOpenID  # type: ignore
 
 load_dotenv()
 
@@ -20,9 +21,33 @@ logger.setLevel(logging.ERROR)
 logger.setLevel(logging.INFO)
 
 
+class SignalTable:
+    def __init__(self):
+        self.asset_api_base = "https://axh-stage-appl-app-asset-api.azurewebsites.net"
+        self.data = {
+            "grant_type": "client_credentials",
+            "client_id": os.getenv("KEYCLOAK_CLIENT_ID"),
+            "client_secret": os.getenv("CLIENT_SECRET"),
+        }
+        self.auth_header = {"Authorization": "Bearer " + self.provide_token()}
+
+    def provide_token(self):
+        res = requests.post(
+            "https://accounts.withaxpo.com/auth/realms/axh/protocol/openid-connect/token",
+            data=self.data,
+        )
+        return res.json()["access_token"]
+
+    def provide_signal_data(self):
+        res = requests.get(f"{self.asset_api_base}/signals?limit={10}&offset={0}", headers=self.auth_header)
+        data = res.json()
+        return pd.json_normalize(data['records'])
+
+
 class AzureFunctionStreaming:
     def __init__(self) -> None:
         # Load data
+
         sensors = pd.read_csv("Sensor.csv")
         reduced_sensor_data = sensors[['SensorId', 'SensorName', 'Plant']]
         self.sensor_table = reduced_sensor_data
@@ -43,7 +68,6 @@ class AzureFunctionStreaming:
         self.conn = timescale_client.get_connection()
         cols = ['ts', 'sensorid', 'measurementvalue']
         self.mgr = CopyManager(self.conn, 'measurements', cols)
-
 
     async def input(self, myblob: func.InputStream):
         logger.info(f"Name: {myblob.name}  "
