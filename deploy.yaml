@@ -77,8 +77,7 @@ stages:
           -TIMESCALE_PORT 27992
           -TIMESCALE_DATABASE_NAME "iot_db"
           -AZURE_CONTAINER_NAME "missing-sensors"
-          -MyStorageAccountAppSetting_blobServiceUri "https://$(storageAccountName).blob.core.windows.net"
-          -MyStorageAccountAppSetting_queueServiceUri "https://$(storageAccountName).queue.core.windows.net"
+          
 
 
           
