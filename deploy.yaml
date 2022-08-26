@@ -1,15 +1,15 @@
 variables:
-- group: 'axh-lab'
+- group: 'axh-dev-ml'
 - name: vmImageName
   value: 'ubuntu-latest'
 - name: dockerImageName
-  value: axh-lab-appl-streaming
+  value: axh-timescale-streaming
 - name: TAG
   value: '$(Build.SourceVersion)'  
 - name: dockerRegistryServiceConnection
-  value: axh4lab4appl4streaming4acr
+  value: axh4nonprod4shared4cr
 - name: functionAppName
-  value: 'axh-lab-appl-streaming-func'
+  value: 'axh-stage-appl-timescale-streaming-func'
 - name: azureSubscription
   value: 'azfunction'
 
@@ -66,10 +66,10 @@ stages:
       inputs:
         azureSubscription: '$(azureSubscription)'
         appName: $(functionAppName)
-        imageName: 'axh4lab4appl4streaming4acr.azurecr.io/$(dockerImageName):$(TAG)'
+        imageName: 'axh4nonprod4shared4cr.azurecr.io/$(dockerImageName):$(TAG)'
         appSettings: >-
           -TEAMS_URL "https://axpogrp.webhook.office.com/webhookb2/1c7d8e30-f530-4faf-acc0-7ef098a2a388@8619c67c-945a-48ae-8e77-35b1b71c9b98/IncomingWebhook/5b6d6935cb774847950f3f9cd081c0cb/adfeab72-7d9c-4e19-a21b-6781b139b707"
-          -LINK_TO_STORAGE_ACCOUNT "https://portal.azure.com/#view/Microsoft_Azure_Storage/ContainerMenuBlade/~/overview/storageAccountId/%2Fsubscriptions%2F58b564b2-e2b7-4d4b-b168-5554c5a2aa5f%2FresourceGroups%2Faxh-lab-appl-streaming-rg%2Fproviders%2FMicrosoft.Storage%2FstorageAccounts%2Faxh4lab4streaming4sa/path/missing-sensors/defaultId/properties/publicAccessVal/None"
+          -LINK_TO_STORAGE_ACCOUNT localhost:8000
           -TIMESCALE_USERNAME "tsdbadmin"
           -TIMESCALE_HOST_URL "axh-lab-appl-timescale-streaming-db-axpo-c52c.a.timescaledb.io"
           -TIMESCALE_PORT 27992
