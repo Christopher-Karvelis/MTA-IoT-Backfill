@@ -12,8 +12,6 @@ variables:
   value: 'axh-lab-appl-streaming-func'
 - name: azureSubscription
   value: 'azfunction'
-- name: storageAccountName
-  value: 'axh4lab4streaming4sa'
 
 
 pool:
