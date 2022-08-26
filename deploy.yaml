@@ -11,7 +11,7 @@ variables:
 - name: functionAppName
   value: 'axh-stage-appl-timescale-streaming-func'
 - name: azureSubscription
-  value: 'azfunction'
+  value: 'terraform_nonprod_spi'
 
 
 pool:
