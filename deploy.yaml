@@ -12,6 +12,9 @@ variables:
   value: 'axh-lab-appl-streaming-func'
 - name: azureSubscription
   value: 'azfunction'
+- name: storageAccountName
+  value: 'axh4lab4streaming4sa'
+
 
 pool:
   vmImage: $(vmImageName)
@@ -74,7 +77,8 @@ stages:
           -TIMESCALE_PORT 27992
           -TIMESCALE_DATABASE_NAME "iot_db"
           -AZURE_CONTAINER_NAME "missing-sensors"
-          -TIMESCALE_PASSWORD @Microsoft.KeyVault(VaultName=axh-dev-appl-analy-kv;SecretName=axh-dev-appl-timescale-pw-secret)
+          -MyStorageAccountAppSetting_blobServiceUri "$(storageAccountName).blob.core.windows.net"
+          -MyStorageAccountAppSetting_queueServiceUri "$(storageAccountName).queue.core.windows.net"
 
 
           
