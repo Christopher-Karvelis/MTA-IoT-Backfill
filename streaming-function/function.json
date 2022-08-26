@@ -5,7 +5,7 @@
       "name": "myblob",
       "type": "blobTrigger",
       "direction": "in",
-      "path": "axh-opcpublisher/{name}",
+      "path": "test/{name}",
       "connection": "AzureWebJobsStorage"
     }
   ]
