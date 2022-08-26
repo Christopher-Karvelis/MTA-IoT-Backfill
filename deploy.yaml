@@ -9,7 +9,7 @@ variables:
 - name: dockerRegistryServiceConnection
   value: axh4nonprod4shared4cr
 - name: functionAppName
-  value: 'axh-stage-appl-timescale-streaming-func'
+  value: 'axh-stage-appl-streaming-func'
 - name: azureSubscription
   value: 'terraform_nonprod_spi'
 
