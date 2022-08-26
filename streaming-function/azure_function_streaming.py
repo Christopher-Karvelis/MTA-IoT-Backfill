@@ -49,7 +49,7 @@ class AzureFunctionStreaming:
         # Timescale
         timescale_client = TimescaleClient()
         self.conn = timescale_client.get_connection()
-        cols = ["ts", "sensorid", "measurementvalue"]
+        cols = ["ts", "signal_id", "measurement_value"]
         self.mgr = CopyManager(self.conn, "measurements", cols)
 
     async def input(self, myblob: func.InputStream):
