@@ -61,52 +61,20 @@ stages:
   - job: 
     displayName: Deploy
     steps:
-    - task: AzureAppServiceSettings@1
-      displayName: Set Functions app configuration
-      inputs:
-        azureSubscription: $(azureSubscription)
-        appName: $(functionAppName)
-        appSettings: |
-          [
-            {
-              "name": "TEAMS_URL",
-              "value": "https://axpogrp.webhook.office.com/webhookb2/1c7d8e30-f530-4faf-acc0-7ef098a2a388@8619c67c-945a-48ae-8e77-35b1b71c9b98/IncomingWebhook/5b6d6935cb774847950f3f9cd081c0cb/adfeab72-7d9c-4e19-a21b-6781b139b707",
-              "slotSetting": false
-            },
-            {
-              "name": "LINK_TO_STORAGE_ACCOUNT",
-              "value": "https://portal.azure.com/#view/Microsoft_Azure_Storage/ContainerMenuBlade/~/overview/storageAccountId/%2Fsubscriptions%2F58b564b2-e2b7-4d4b-b168-5554c5a2aa5f%2FresourceGroups%2Faxh-lab-appl-streaming-rg%2Fproviders%2FMicrosoft.Storage%2FstorageAccounts%2Faxh4lab4streaming4sa/path/missing-sensors/defaultId/properties/publicAccessVal/None", 
-              "slotSetting": false
-            },
-            {
-              "name": "TIMESCALE_USERNAME",
-              "value": "tsdbadmin", 
-              "slotSetting": false
-            },
-            {
-              "name": "TIMESCALE_HOST_URL",
-              "value": "axh-lab-appl-timescale-db-big-axpo-c52c.a.timescaledb.io", 
-              "slotSetting": false
-            },
-            {
-              "name": "TIMESCALE_PORT",
-              "value": "27992", 
-              "slotSetting": false
-            },
-            {
-              "name": "TIMESCALE_DATABASE_NAME",
-              "value": "iot_db_big", 
-              "slotSetting": false
-            },
-            {
-              "name": "AZURE_CONTAINER_NAME",
-              "value": "missing-sensors", 
-              "slotSetting": false
-            }
-          ]
-
     - task: AzureFunctionAppContainer@1
       inputs:
         azureSubscription: '$(azureSubscription)'
         appName: $(functionAppName)
         imageName: 'axh4lab4appl4streaming4acr.azurecr.io/$(dockerImageName):$(TAG)'
+        appSettings: >-
+          -TEAMS_URL "https://axpogrp.webhook.office.com/webhookb2/1c7d8e30-f530-4faf-acc0-7ef098a2a388@8619c67c-945a-48ae-8e77-35b1b71c9b98/IncomingWebhook/5b6d6935cb774847950f3f9cd081c0cb/adfeab72-7d9c-4e19-a21b-6781b139b707"
+          -LINK_TO_STORAGE_ACCOUNT "https://portal.azure.com/#view/Microsoft_Azure_Storage/ContainerMenuBlade/~/overview/storageAccountId/%2Fsubscriptions%2F58b564b2-e2b7-4d4b-b168-5554c5a2aa5f%2FresourceGroups%2Faxh-lab-appl-streaming-rg%2Fproviders%2FMicrosoft.Storage%2FstorageAccounts%2Faxh4lab4streaming4sa/path/missing-sensors/defaultId/properties/publicAccessVal/None"
+          -TIMESCALE_USERNAME "tsdbadmin"
+          -TIMESCALE_HOST_URL "axh-lab-appl-timescale-streaming-db-axpo-c52c.a.timescaledb.io"
+          -TIMESCALE_PORT 27992
+          -TIMESCALE_DATABASE_NAME "iot_db"
+          -AZURE_CONTAINER_NAME "missing-sensors"
+          -TIMESCALE_PASSWORD @Microsoft.KeyVault(VaultName=axh-dev-appl-analy-kv;SecretName=....)
+
+
+          
