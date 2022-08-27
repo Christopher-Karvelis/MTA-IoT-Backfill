@@ -14,8 +14,8 @@ class SignalClient:
         self._asset_api_base = os.getenv("ASSET_API_BASE")
         self._data = {
             "grant_type": "client_credentials",
-            "client_id": os.getenv("KEYCLOAK_CLIENT_ID"),
-            "client_secret": os.getenv("CLIENT_SECRET"),
+            "client_id": os.getenv("API_CLIENT_ID"),
+            "client_secret": os.getenv("API_CLIENT_SECRET"),
         }
         self._auth_header = {"Authorization": "Bearer " + self._provide_token()}
         self._power_plants = self._provide_power_plants()
