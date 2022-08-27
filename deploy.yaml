@@ -74,7 +74,7 @@ stages:
           -TIMESCALE_HOST_URL "axh-lab-appl-timescale-streaming-db-axpo-c52c.a.timescaledb.io"
           -TIMESCALE_PORT 27992
           -TIMESCALE_DATABASE_NAME "iot_db"
-          -TIMESCALE_PASSWORD @Microsoft.KeyVault(VaultName=axh-stage-appl-analy-kv;SecretName=axh-dev-appl-timescale-pw-secret)
+          -TIMESCALE_PASSWORD @Microsoft.KeyVault(VaultName=axh-stage-appl-analy-kv;SecretName=axh-stage-appl-timescale-pw-secret)
           -AZURE_CONTAINER_NAME "missing-sensors"
           -ASSET_API_BASE "https://axh-stage-appl-app-asset-api.azurewebsites.net"
           -API_CLIENT_ID "azure-func-stage"
