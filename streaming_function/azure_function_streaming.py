@@ -24,9 +24,13 @@ logger.setLevel(logging.INFO)
 class AzureFunctionStreaming:
     def __init__(self) -> None:
         # Load data
-        signal_client = SignalClient()
-        self.hash_table = signal_client.provide_hash_table()
-        logger.info("Signal Table Loaded")
+        if os.getenv("RELOAD_SIGNAL_TABLE"):
+            signal_client = SignalClient()
+            self.hash_table = signal_client.provide_hash_table()
+            self.hash_table.to_csv("Signal_Hash_Table.csv")
+            logger.info("Signal Table Loaded")
+        else:
+            self.hash_table = pd.read_csv("Signal_Hash_Table.csv")
 
         # undefined Sensors
         self.undefined_sensors = pd.DataFrame(
