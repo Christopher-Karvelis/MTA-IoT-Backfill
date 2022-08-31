@@ -118,10 +118,8 @@ class AzureFunctionStreaming:
         #     WHERE {table}.value <> EXCLUDED.value
         # '''.format(table='measurements'))
 
-        try:
-            await conn.copy_records_to_table("measurements", records=values)
-        except Exception as ex:
-            logger.info(f"Any Exception: {ex}", values)
+        unique = list(set(values))
+        await conn.copy_records_to_table("measurements", records=unique)
         await conn.close()
 
         logger.info(f"Uploading blob {myblob.name} was successful")
