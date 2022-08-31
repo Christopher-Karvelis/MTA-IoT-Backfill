@@ -132,7 +132,10 @@ class AzureFunctionStreaming:
         #     WHERE {table}.value <> EXCLUDED.value
         # '''.format(table='measurements'))
 
-        await conn.copy_records_to_table("measurements", records=values)
+        try:
+            await conn.copy_records_to_table("measurements", records=values)
+        except TypeError:
+            logger.info("TypeError:", values)
         await conn.close()
 
         logger.info(f"Uploading blob {myblob.name} was successful")
