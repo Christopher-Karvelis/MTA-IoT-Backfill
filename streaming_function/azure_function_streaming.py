@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 
 import asyncpg
 import azure.functions as func
@@ -119,7 +119,13 @@ class AzureFunctionStreaming:
         # '''.format(table='measurements'))
 
         unique = list(set(values))
-        await conn.copy_records_to_table("measurements", records=unique)
+
+        remove_nan = [i for i in unique if type(i[2]) != str]
+
+        time = datetime.now(timezone.utc)
+        drop_old_data = [i for i in remove_nan if i[0] < time - timedelta(days=7)]
+
+        await conn.copy_records_to_table("measurements", records=drop_old_data)
         await conn.close()
 
         logger.info(f"Uploading blob {myblob.name} was successful")
