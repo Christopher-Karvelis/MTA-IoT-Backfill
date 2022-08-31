@@ -55,11 +55,6 @@ class AzureFunctionStreaming:
         self.port = os.getenv("TIMESCALE_PORT")
         self.dbname = os.getenv("TIMESCALE_DATABASE_NAME")
 
-        # timescale_client = TimescaleClient()
-        # self.conn = timescale_client.get_connection()
-        # cols = ["ts", "signal_id", "measurement_value"]
-        # self.mgr = CopyManager(self.conn, "measurements", cols)
-
     async def input(self, myblob: func.InputStream):
 
         conn = await asyncpg.connect(
@@ -74,7 +69,7 @@ class AzureFunctionStreaming:
         for entry in json_data:
             name = (
                 entry["NodeId"]
-                .partition("#s=")[2]
+                .partition("s=")[2]
                 .replace("%3a", ":")
                 .replace("%2f", "/")
             )
@@ -108,21 +103,12 @@ class AzureFunctionStreaming:
                 f"New missing sensor is added to missing-sensors-{date.today().strftime('%Y-%m-%d')}.csv"
             )
             self.myTeamsMessage.send()
-        # try:
-        #     self.conn.isolation_level
-        # except OperationalError as oe:
-        #     timescale_client = TimescaleClient()
-        #     self.conn = timescale_client.get_connection()
-        #     logger.info(f"New connection needs to be established: {oe}")
-        # self.mgr.copy(values)
-        # self.conn.commit()
 
         # await conn.execute(
         #     """CREATE TEMPORARY TABLE _data(
         #     ts TIMESTAMP, signal_id INTEGER, measurement_value NUMERIC
         # )"""
         # )
-
         # await conn.copy_records_to_table('_data', records=values)
         # await conn.execute('''
         #     INSERT INTO {table}(ts, signal_id, measurement_value)
