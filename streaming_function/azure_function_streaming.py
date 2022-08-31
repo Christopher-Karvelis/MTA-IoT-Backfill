@@ -117,11 +117,11 @@ class AzureFunctionStreaming:
         # self.mgr.copy(values)
         # self.conn.commit()
 
-        await conn.execute(
-            """CREATE TEMPORARY TABLE _data(
-            ts TIMESTAMP, signal_id INTEGER, measurement_value NUMERIC
-        )"""
-        )
+        # await conn.execute(
+        #     """CREATE TEMPORARY TABLE _data(
+        #     ts TIMESTAMP, signal_id INTEGER, measurement_value NUMERIC
+        # )"""
+        # )
 
         # await conn.copy_records_to_table('_data', records=values)
         # await conn.execute('''
@@ -134,8 +134,8 @@ class AzureFunctionStreaming:
 
         try:
             await conn.copy_records_to_table("measurements", records=values)
-        except TypeError:
-            logger.info("TypeError:", values)
+        except Exception as ex:
+            logger.info(f"Any Exception: {ex}", values)
         await conn.close()
 
         logger.info(f"Uploading blob {myblob.name} was successful")
