@@ -122,8 +122,7 @@ class AzureFunctionStreaming:
             INSERT INTO {table}(ts, signal_id, measurement_value)
             SELECT * FROM _data
             ON CONFLICT (ts, signal_id)
-            DO UPDATE SET value=EXCLUDED.value
-            WHERE {table}.value <> EXCLUDED.value
+            DO DO NOTHING
         """.format(
                 table="measurements"
             )
