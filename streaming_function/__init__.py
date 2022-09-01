@@ -16,3 +16,5 @@ async def main(myblob: func.InputStream):
     logging.info("Python Blob trigger function processed %s", myblob.name)
     if myblob.length > 1:
         await azure_streaming.input(myblob)
+    else:
+        pass
