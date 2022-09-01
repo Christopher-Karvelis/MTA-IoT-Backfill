@@ -113,7 +113,7 @@ class AzureFunctionStreaming:
 
         await conn.execute(
             """CREATE TEMPORARY TABLE _data(
-            ts TIMESTAMP, signal_id INTEGER, measurement_value NUMERIC
+            ts TIMESTAMPTZ, signal_id INTEGER, measurement_value DOUBLE PRECISION
         )"""
         )
         await conn.copy_records_to_table("_data", records=drop_old_data)
