@@ -122,7 +122,7 @@ class AzureFunctionStreaming:
             INSERT INTO {table}(ts, signal_id, measurement_value)
             SELECT * FROM _data
             ON CONFLICT (ts, signal_id)
-            DO DO NOTHING
+            DO NOTHING
         """.format(
                 table="measurements"
             )
