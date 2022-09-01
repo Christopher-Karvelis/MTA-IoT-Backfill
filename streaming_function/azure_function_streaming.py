@@ -104,20 +104,6 @@ class AzureFunctionStreaming:
             )
             self.myTeamsMessage.send()
 
-        # await conn.execute(
-        #     """CREATE TEMPORARY TABLE _data(
-        #     ts TIMESTAMP, signal_id INTEGER, measurement_value NUMERIC
-        # )"""
-        # )
-        # await conn.copy_records_to_table('_data', records=values)
-        # await conn.execute('''
-        #     INSERT INTO {table}(ts, signal_id, measurement_value)
-        #     SELECT * FROM _data
-        #     ON CONFLICT (ts, signal_id)
-        #     DO UPDATE SET value=EXCLUDED.value
-        #     WHERE {table}.value <> EXCLUDED.value
-        # '''.format(table='measurements'))
-
         unique = list(set(values))
 
         remove_nan = [i for i in unique if type(i[2]) != str]
@@ -125,7 +111,26 @@ class AzureFunctionStreaming:
         time = datetime.now(timezone.utc)
         drop_old_data = [i for i in remove_nan if i[0] > time - timedelta(days=7)]
 
-        await conn.copy_records_to_table("measurements", records=drop_old_data)
+        await conn.execute(
+            """CREATE TEMPORARY TABLE _data(
+            ts TIMESTAMP, signal_id INTEGER, measurement_value NUMERIC
+        )"""
+        )
+        await conn.copy_records_to_table("_data", records=drop_old_data)
+        await conn.execute(
+            """
+            INSERT INTO {table}(ts, signal_id, measurement_value)
+            SELECT * FROM _data
+            ON CONFLICT (ts, signal_id)
+            DO UPDATE SET value=EXCLUDED.value
+            WHERE {table}.value <> EXCLUDED.value
+        """.format(
+                table="measurements"
+            )
+        )
+
+        # await conn.copy_records_to_table("measurements", records=drop_old_data)
+
         await conn.close()
 
         logger.info(f"Uploading blob {myblob.name} was successful")
