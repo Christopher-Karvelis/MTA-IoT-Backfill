@@ -133,3 +133,4 @@ class AzureFunctionStreaming:
         await conn.close()
 
         logger.info(f"Uploading blob {myblob.name} was successful")
+        logger.info(f"Uploaded {len(drop_old_data)} to {myblob.name}")
