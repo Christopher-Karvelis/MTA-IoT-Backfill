@@ -79,7 +79,8 @@ stages:
           -ASSET_API_BASE "https://axh-stage-appl-app-asset-api.azurewebsites.net"
           -API_CLIENT_ID "azure-func-stage"
           -API_CLIENT_SECRET @Microsoft.KeyVault(VaultName=axh-stage-appl-analy-kv;SecretName=axh-stage-appl-analy-azure-func-api-client-secret)
-          -RELOAD_SIGNAL_TABLE False
+          -RELOAD_SIGNAL_TABLE True
+          -PYTHONHASHSEED 0
           
 
 

@@ -22,13 +22,19 @@ logger.setLevel(logging.INFO)
 class AzureFunctionStreaming:
     def __init__(self) -> None:
         # Load data
-        if os.getenv("RELOAD_SIGNAL_TABLE"):
+        if os.getenv("RELOAD_SIGNAL_TABLE", "False").lower() in (
+            "true",
+            "1",
+            "t",
+            "True",
+        ):
             signal_client = SignalClient()
             self.hash_table = signal_client.provide_hash_table()
             self.hash_table.to_csv("Signal_Hash_Table.csv")
             logger.info("Signal Table Loaded")
         else:
             self.hash_table = pd.read_csv("Signal_Hash_Table.csv")
+            self.hash_table = self.hash_table.set_index("Hash")
 
         # undefined Sensors
         self.undefined_sensors = pd.DataFrame(
@@ -66,10 +72,12 @@ class AzureFunctionStreaming:
         json_data = json.load(myblob)
         values = []
         send_message = False
+        count = 0
         for entry in json_data:
+            count += 1
             name = (
                 entry["NodeId"]
-                .partition("s=")[2]
+                .partition(";s=")[2]
                 .replace("%3a", ":")
                 .replace("%2f", "/")
             )
@@ -104,12 +112,13 @@ class AzureFunctionStreaming:
             )
             self.myTeamsMessage.send()
 
+        logger.info(f"Total numbers processed in Blob {count}")
         unique = list(set(values))
 
         remove_nan = [i for i in unique if type(i[2]) != str]
 
         time = datetime.now(timezone.utc)
-        drop_old_data = [i for i in remove_nan if i[0] > time - timedelta(hours=7)]
+        drop_old_data = [i for i in remove_nan if i[0] > time - timedelta(hours=24)]
 
         await conn.execute(
             """CREATE TEMPORARY TABLE _data(
