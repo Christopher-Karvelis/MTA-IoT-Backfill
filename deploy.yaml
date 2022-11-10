@@ -65,7 +65,7 @@ stages:
           instructions: 'Please validate the build configuration and resume'
           onTimeout: 'resume'
 
-- stage: Deploy
+- stage: Deploy_Streaming_Stage
   dependsOn: [Request_Deployment_Streaming_STAGE]
   displayName: Deploy
   jobs:
@@ -145,7 +145,7 @@ stages:
           instructions: 'Please validate the build configuration and resume'
           onTimeout: 'resume'
 
-- stage: Deploy
+- stage: Deploy_Streaming_Prod
   dependsOn: [Request_Deployment_Streaming_Prod]
   displayName: Deploy
   jobs:
