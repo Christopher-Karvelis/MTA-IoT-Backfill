@@ -131,5 +131,5 @@ class AzureFunctionStreaming:
         logger.info(f"Uploading blob {myblob.name} was successful")
         logger.info(
             f"Uploaded {len(drop_old_data)} to {myblob.name} --"
-            f" fraction of uploaded/processed {len(drop_old_data)/count}"
+            f" fraction of uploaded/processed {len(drop_old_data)/(count+0.00001)}"
         )
