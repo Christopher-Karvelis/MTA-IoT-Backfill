@@ -1,13 +1,11 @@
 import json
 import logging
 import os
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
 import asyncpg
 import azure.functions as func
 import pandas as pd
-import pymsteams
-from azure.storage.blob import BlobServiceClient
 from dotenv import load_dotenv
 
 from .signal_client import SignalClient
@@ -40,19 +38,14 @@ class AzureFunctionStreaming:
         self.undefined_sensors = pd.DataFrame(
             columns=[["control_system_identifier", "plant"]]
         )
-        self.myTeamsMessage = pymsteams.connectorcard(os.getenv("TEAMS_URL"))
-        self.myTeamsMessage.addLinkButton(
-            "Check this container for missing sensors",
-            os.getenv("LINK_TO_STORAGE_ACCOUNT"),
-        )
-        connection_string = os.getenv("AzureWebJobsStorage")
-        self.blob_service_client = BlobServiceClient.from_connection_string(
-            connection_string, logging_enable=False
-        )
-        self.blob_client = self.blob_service_client.get_blob_client(
-            container=os.getenv("AZURE_CONTAINER_NAME"),
-            blob=f"missing-sensors-{date.today().strftime('%Y-%m-%d')}.csv",
-        )
+        # connection_string = os.getenv("AzureWebJobsStorage")
+        # self.blob_service_client = BlobServiceClient.from_connection_string(
+        #    connection_string, logging_enable=False
+        # )
+        # self.blob_client = self.blob_service_client.get_blob_client(
+        #    container=os.getenv("AZURE_CONTAINER_NAME"),
+        #    blob=f"missing-sensors-{date.today().strftime('%Y-%m-%d')}.csv",
+        # )
 
         # Timescale
         self.password = os.getenv("TIMESCALE_PASSWORD")
@@ -71,46 +64,41 @@ class AzureFunctionStreaming:
 
         json_data = json.load(myblob)
         values = []
-        send_message = False
+        # send_message = False
         count = 0
         for entry in json_data:
             count += 1
-            name = (
-                entry["NodeId"]
-                .partition(";s=")[2]
-                .replace("%3a", ":")
-                .replace("%2f", "/")
-            )
-            plant = entry["DisplayName"].partition("_")[0]
+            control_system_identifier = entry["control_system_identifier"]
+            plant = entry["plant"]
             try:
                 values.append(
                     (
-                        pd.to_datetime(
-                            entry["Value"]["SourceTimestamp"]
-                        ).to_pydatetime(),
-                        self.hash_table.loc[hash(name + plant)].values[0],
-                        entry["Value"]["Value"],
+                        pd.to_datetime(entry["ts"]).to_pydatetime(),
+                        self.hash_table.loc[
+                            hash(control_system_identifier + plant)
+                        ].values[0],
+                        entry["measurement_value"],
                     )
                 )
             except KeyError:
                 try:
-                    self.undefined_sensors.loc[hash(name + plant)]
+                    self.undefined_sensors.loc[hash(control_system_identifier + plant)]
                 except KeyError:
-                    logger.info(f"Missing Sensor coming from OPC: {name}")
+                    logger.info(
+                        f"Missing Sensor coming from OPC: {control_system_identifier}"
+                    )
                     logger.info(
                         f"Number of undefined Sensors coming from OPC: {self.undefined_sensors.shape[0]}"
                     )
-                    self.undefined_sensors.loc[hash(name + plant)] = [name, plant]
-                    send_message = True
+                    self.undefined_sensors.loc[
+                        hash(control_system_identifier + plant)
+                    ] = [control_system_identifier, plant]
+                    # send_message = True
 
-        if send_message:
-            self.blob_client.upload_blob(
-                data=self.undefined_sensors.to_csv(), overwrite=True
-            )
-            self.myTeamsMessage.text(
-                f"New missing sensor is added to missing-sensors-{date.today().strftime('%Y-%m-%d')}.csv"
-            )
-            self.myTeamsMessage.send()
+        # if send_message:
+        #    self.blob_client.upload_blob(
+        #        data=self.undefined_sensors.to_csv(), overwrite=True
+        #    )
 
         logger.info(f"Total numbers processed in Blob {count}")
         unique = list(set(values))
@@ -136,7 +124,6 @@ class AzureFunctionStreaming:
                 table="measurements"
             )
         )
-
         # await conn.copy_records_to_table("measurements", records=drop_old_data)
 
         await conn.close()
