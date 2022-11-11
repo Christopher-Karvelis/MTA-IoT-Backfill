@@ -8,6 +8,7 @@ import azure.functions as func
 import pandas as pd
 from dotenv import load_dotenv
 
+from streaming_function.blob_storge_writer import BlobStorageWriter
 from streaming_function.signal_client import SignalClient
 from streaming_function.timescale_client import TimeScaleClient
 
@@ -26,18 +27,7 @@ class AzureFunctionStreaming:
         self.hash_table.to_csv("Signal_Hash_Table.csv")
         logger.info("Signal Table Loaded")
 
-        # undefined Sensors
-        self.undefined_sensors = pd.DataFrame(
-            columns=[["control_system_identifier", "plant"]]
-        )
-        # connection_string = os.getenv("AzureWebJobsStorage")
-        # self.blob_service_client = BlobServiceClient.from_connection_string(
-        #    connection_string, logging_enable=False
-        # )
-        # self.blob_client = self.blob_service_client.get_blob_client(
-        #    container=os.getenv("AZURE_CONTAINER_NAME"),
-        #    blob=f"missing-sensors-{date.today().strftime('%Y-%m-%d')}.csv",
-        # )
+        self.rejected_signals_blob_writer = BlobStorageWriter(logger=logger)
 
         # Timescale
         self.password = os.getenv("TIMESCALE_PASSWORD")
@@ -58,6 +48,7 @@ class AzureFunctionStreaming:
 
         json_data = json.load(myblob)
         values = []
+        rejected_by_streaming = []
         count = 0
         for entry in json_data:
             count += 1
@@ -74,23 +65,10 @@ class AzureFunctionStreaming:
                     )
                 )
             except KeyError:
-                try:
-                    self.undefined_sensors.loc[hash(control_system_identifier + plant)]
-                except KeyError:
-                    logger.info(
-                        f"Missing Sensor coming from OPC: {control_system_identifier}"
-                    )
-                    logger.info(
-                        f"Number of undefined Sensors coming from OPC: {self.undefined_sensors.shape[0]}"
-                    )
-                    self.undefined_sensors.loc[
-                        hash(control_system_identifier + plant)
-                    ] = [control_system_identifier, plant]
+                rejected_by_streaming.append(entry)
 
-        # if send_message:
-        #    self.blob_client.upload_blob(
-        #        data=self.undefined_sensors.to_csv(), overwrite=True
-        #    )
+        if len(rejected_by_streaming) > 0:
+            await self.rejected_signals_blob_writer.upload_blob(rejected_by_streaming)
 
         logger.info(f"Total numbers processed in Blob {count}")
         unique = list(set(values))
@@ -107,11 +85,13 @@ class AzureFunctionStreaming:
             data=data_younger_than_8_hours
         )
         await timescale_client.load_temporary_table_to_measurements()
-
         await conn.close()
+
+        def zero_div(x, y):
+            return y and x / y or 0
 
         logger.info(f"Uploading blob {myblob.name} was successful")
         logger.info(
             f"Uploaded {len(data_younger_than_8_hours)} to {myblob.name} --"
-            f" fraction of uploaded/processed {len(data_younger_than_8_hours)/(count+0.00001)}"
+            f" fraction of uploaded/processed {zero_div(len(data_younger_than_8_hours), count)}"
         )

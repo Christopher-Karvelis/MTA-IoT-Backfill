@@ -88,8 +88,8 @@ stages:
           -API_CLIENT_ID "azure-func-stage"
           -API_CLIENT_SECRET @Microsoft.KeyVault(VaultName=axh-stage-appl-analy-kv;SecretName=axh-stage-appl-analy-azure-func-api-client-secret)
           -PYTHONHASHSEED 0
+          -AZURE_CONTAINER_NAME "axh-rejected-signals"
           
-
 
 # ***************** PROD ****************************
 
@@ -168,3 +168,4 @@ stages:
           -API_CLIENT_ID "azure-func-stage"
           -API_CLIENT_SECRET @Microsoft.KeyVault(VaultName=axh-prod-appl-analy-kv;SecretName=axh-prod-appl-analy-azure-func-api-client-secret)
           -PYTHONHASHSEED 0
+          -AZURE_CONTAINER_NAME "axh-rejected-signals"

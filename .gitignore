@@ -134,6 +134,4 @@ __queuestorage__
 __azurite_db*__.json
 .python_packages
 
-streaming_function/__init__.py
 Signal_Hash_Table.csv
-streaming_function/function.json
