@@ -36,7 +36,7 @@ class AzureFunctionStreaming:
         self.port = os.getenv("TIMESCALE_PORT")
         self.dbname = os.getenv("TIMESCALE_DATABASE_NAME")
 
-    async def input(self, myblob: func.InputStream):
+    async def input(self, json_blob: func.InputStream):
 
         conn = await asyncpg.connect(
             f"postgres://{self.username}:{self.password}@{self.host}:{self.port}/{self.dbname}"
@@ -44,9 +44,11 @@ class AzureFunctionStreaming:
 
         timescale_client = TimeScaleClient(connection=conn)
 
-        logger.info(f"Name: {myblob.name}  " f"Blob Size: {myblob.length} bytes  ")
+        logger.info(
+            f"Name: {json_blob.name}  " f"Blob Size: {json_blob.length} bytes  "
+        )
 
-        json_data = json.load(myblob)
+        json_data = json.load(json_blob)
         values = []
         rejected_by_streaming = []
         count = 0
@@ -90,8 +92,8 @@ class AzureFunctionStreaming:
         def zero_div(x, y):
             return y and x / y or 0
 
-        logger.info(f"Uploading blob {myblob.name} was successful")
+        logger.info(f"Uploading blob {json_blob.name} was successful")
         logger.info(
-            f"Uploaded {len(data_younger_than_8_hours)} to {myblob.name} --"
+            f"Uploaded {len(data_younger_than_8_hours)} to {json_blob.name} --"
             f" fraction of uploaded/processed {zero_div(len(data_younger_than_8_hours), count)}"
         )
