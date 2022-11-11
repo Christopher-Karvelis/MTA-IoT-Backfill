@@ -2,7 +2,7 @@
   "scriptFile": "__init__.py",
   "bindings": [
     {
-      "name": "json_blob",
+      "name": "jsonblob",
       "type": "blobTrigger",
       "direction": "in",
       "path": "axh-opcpublisher/{name}",
