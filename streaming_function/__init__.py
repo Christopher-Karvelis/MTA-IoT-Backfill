@@ -12,9 +12,9 @@ from .azure_function_streaming import AzureFunctionStreaming
 azure_streaming = AzureFunctionStreaming()
 
 
-async def main(myblob: func.InputStream):
-    logging.info("Python Blob trigger function processed %s", myblob.name)
-    if myblob.length is not None:
-        await azure_streaming.input(myblob)
+async def main(json_blob: func.InputStream):
+    logging.info("Python Blob trigger function processed %s", json_blob.name)
+    if json_blob.length is not None:
+        await azure_streaming.input(json_blob)
     else:
         pass

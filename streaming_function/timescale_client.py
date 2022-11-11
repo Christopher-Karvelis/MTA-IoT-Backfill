@@ -3,6 +3,7 @@ class TimeScaleClient:
         self.connection = connection
 
     async def create_temporary_table(self):
+        """This is needed in order to be able to upsert data. Sometimes values come with duplication"""
         await self.connection.execute(
             """CREATE TEMPORARY TABLE _data(
             ts TIMESTAMPTZ, signal_id INTEGER, measurement_value DOUBLE PRECISION
