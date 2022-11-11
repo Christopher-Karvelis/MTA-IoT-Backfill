@@ -14,7 +14,8 @@ pool:
 # ***************** Stage ****************************
 stages:
 - stage: Build_Azure_Func_Streaming_Stage
-  dependsOn: [] 
+  dependsOn: []
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
   displayName: STAGE Build Az Func
   jobs:
   - job: Build
@@ -95,6 +96,7 @@ stages:
 
 - stage: Build_Azure_Func_Streaming_Prod
   dependsOn: []
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
   displayName: PROD Build Az Func
   jobs:
   - job: Build
