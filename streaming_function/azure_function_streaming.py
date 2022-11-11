@@ -8,7 +8,8 @@ import azure.functions as func
 import pandas as pd
 from dotenv import load_dotenv
 
-from .signal_client import SignalClient
+from streaming_function.signal_client import SignalClient
+from streaming_function.timescale_client import TimeScaleClient
 
 load_dotenv()
 
@@ -20,19 +21,10 @@ logger.setLevel(logging.INFO)
 class AzureFunctionStreaming:
     def __init__(self) -> None:
         # Load data
-        if os.getenv("RELOAD_SIGNAL_TABLE", "False").lower() in (
-            "true",
-            "1",
-            "t",
-            "True",
-        ):
-            signal_client = SignalClient()
-            self.hash_table = signal_client.provide_hash_table()
-            self.hash_table.to_csv("Signal_Hash_Table.csv")
-            logger.info("Signal Table Loaded")
-        else:
-            self.hash_table = pd.read_csv("Signal_Hash_Table.csv")
-            self.hash_table = self.hash_table.set_index("Hash")
+        signal_client = SignalClient()
+        self.hash_table = signal_client.provide_hash_table()
+        self.hash_table.to_csv("Signal_Hash_Table.csv")
+        logger.info("Signal Table Loaded")
 
         # undefined Sensors
         self.undefined_sensors = pd.DataFrame(
@@ -60,11 +52,12 @@ class AzureFunctionStreaming:
             f"postgres://{self.username}:{self.password}@{self.host}:{self.port}/{self.dbname}"
         )
 
+        timescale_client = TimeScaleClient(connection=conn)
+
         logger.info(f"Name: {myblob.name}  " f"Blob Size: {myblob.length} bytes  ")
 
         json_data = json.load(myblob)
         values = []
-        # send_message = False
         count = 0
         for entry in json_data:
             count += 1
@@ -93,7 +86,6 @@ class AzureFunctionStreaming:
                     self.undefined_sensors.loc[
                         hash(control_system_identifier + plant)
                     ] = [control_system_identifier, plant]
-                    # send_message = True
 
         # if send_message:
         #    self.blob_client.upload_blob(
@@ -106,30 +98,20 @@ class AzureFunctionStreaming:
         remove_nan = [i for i in unique if type(i[2]) != str]
 
         time = datetime.now(timezone.utc)
-        drop_old_data = [i for i in remove_nan if i[0] > time - timedelta(hours=8)]
+        data_younger_than_8_hours = [
+            i for i in remove_nan if i[0] > time - timedelta(hours=8)
+        ]
 
-        await conn.execute(
-            """CREATE TEMPORARY TABLE _data(
-            ts TIMESTAMPTZ, signal_id INTEGER, measurement_value DOUBLE PRECISION
-        )"""
+        await timescale_client.create_temporary_table()
+        await timescale_client.copy_records_to_temporary_table(
+            data=data_younger_than_8_hours
         )
-        await conn.copy_records_to_table("_data", records=drop_old_data)
-        await conn.execute(
-            """
-            INSERT INTO {table}(ts, signal_id, measurement_value)
-            SELECT * FROM _data
-            ON CONFLICT (signal_id,ts)
-            DO NOTHING
-        """.format(
-                table="measurements"
-            )
-        )
-        # await conn.copy_records_to_table("measurements", records=drop_old_data)
+        await timescale_client.load_temporary_table_to_measurements()
 
         await conn.close()
 
         logger.info(f"Uploading blob {myblob.name} was successful")
         logger.info(
-            f"Uploaded {len(drop_old_data)} to {myblob.name} --"
-            f" fraction of uploaded/processed {len(drop_old_data)/(count+0.00001)}"
+            f"Uploaded {len(data_younger_than_8_hours)} to {myblob.name} --"
+            f" fraction of uploaded/processed {len(data_younger_than_8_hours)/(count+0.00001)}"
         )
