@@ -77,7 +77,7 @@ class AzureFunctionStreaming:
 
         time = datetime.now(timezone.utc)
         data_younger_than_8_hours = [
-            i for i in remove_nan if i[0] > time - timedelta(hours=48)
+            i for i in remove_nan if i[0] > time - timedelta(hours=8)
         ]
 
         await timescale_client.create_temporary_table()
