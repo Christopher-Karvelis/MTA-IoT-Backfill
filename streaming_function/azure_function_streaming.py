@@ -36,6 +36,8 @@ class AzureFunctionStreaming:
         self.port = os.getenv("TIMESCALE_PORT")
         self.dbname = os.getenv("TIMESCALE_DATABASE_NAME")
 
+        self.time_accepted = 8
+
     async def input(self, jsonblob: func.InputStream):
 
         conn = await asyncpg.connect(
@@ -49,11 +51,20 @@ class AzureFunctionStreaming:
         json_data = json.load(jsonblob)
         values = []
         rejected_by_streaming = []
+        number_of_rejected_by_streaming = 0
         count = 0
+        plants_processed = {}
+        not_numbers_per_power_plant = {}
+        time_now = datetime.now(timezone.utc)
+        time_too_old_per_power_plant = {}
         for entry in json_data:
             count += 1
             control_system_identifier = entry["control_system_identifier"]
             plant = entry["plant"]
+            if plant not in plants_processed:
+                plants_processed[plant] = 1
+            else:
+                plants_processed[plant] += 1
             try:
                 values.append(
                     (
@@ -64,20 +75,47 @@ class AzureFunctionStreaming:
                         entry["measurement_value"],
                     )
                 )
+                if type(entry["measurement_value"]) == str:
+                    if plant not in not_numbers_per_power_plant:
+                        not_numbers_per_power_plant[plant] = [
+                            entry["measurement_value"]
+                        ]
+                    else:
+                        not_numbers_per_power_plant[plant].append(
+                            entry["measurement_value"]
+                        )
+
+                if pd.to_datetime(entry["ts"]).to_pydatetime() <= time_now - timedelta(
+                    hours=self.time_accepted
+                ):
+                    if plant not in time_too_old_per_power_plant:
+                        time_too_old_per_power_plant[plant] = 1
+                    else:
+                        time_too_old_per_power_plant[plant] += 1
+
             except KeyError:
                 rejected_by_streaming.append(entry)
+                number_of_rejected_by_streaming += 1
 
         if len(rejected_by_streaming) > 0:
             await self.rejected_signals_blob_writer.upload_blob(rejected_by_streaming)
 
         logger.info(f"Total numbers processed in Blob {count}")
+        logger.info(f"Number of values processed per plant {plants_processed}")
+        logger.info(
+            f"Number of values rejected i.e. not in our signal list {number_of_rejected_by_streaming}"
+        )
+        logger.info(f"Data in blob is not a number {not_numbers_per_power_plant}")
+        logger.info(
+            f"Data in blob rejected because older then {self.time_accepted} hours {time_too_old_per_power_plant}"
+        )
+
         unique = list(set(values))
-
         remove_nan = [i for i in unique if type(i[2]) != str]
-
-        time = datetime.now(timezone.utc)
         data_younger_than_8_hours = [
-            i for i in remove_nan if i[0] > time - timedelta(hours=8)
+            i
+            for i in remove_nan
+            if i[0] > time_now - timedelta(hours=self.time_accepted)
         ]
 
         await timescale_client.create_temporary_table()
