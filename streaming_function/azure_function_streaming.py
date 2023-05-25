@@ -51,14 +51,11 @@ class AzureFunctionStreaming:
         json_data = json.load(jsonblob)
         values = []
         rejected_by_streaming = []
-        number_of_rejected_by_streaming = 0
-        count = 0
         plants_processed = {}
         not_numbers_per_power_plant = {}
         time_now = datetime.now(timezone.utc)
         time_too_old_per_power_plant = {}
         for entry in json_data:
-            count += 1
             control_system_identifier = entry["control_system_identifier"]
             plant = entry["plant"]
             if plant not in plants_processed:
@@ -95,15 +92,14 @@ class AzureFunctionStreaming:
 
             except KeyError:
                 rejected_by_streaming.append(entry)
-                number_of_rejected_by_streaming += 1
 
         if len(rejected_by_streaming) > 0:
             await self.rejected_signals_blob_writer.upload_blob(rejected_by_streaming)
 
-        logger.info(f"Total numbers processed in Blob {count}")
+        logger.info(f"Total numbers processed in Blob {len(json_data)}")
         logger.info(f"Number of values processed per plant {plants_processed}")
         logger.info(
-            f"Number of values rejected i.e. not in our signal list {number_of_rejected_by_streaming}"
+            f"Number of values rejected i.e. not in our signal list {len(rejected_by_streaming)}"
         )
         logger.info(f"Data in blob is not a number {not_numbers_per_power_plant}")
         logger.info(
@@ -131,5 +127,5 @@ class AzureFunctionStreaming:
         logger.info(f"Uploading blob {jsonblob.name} was successful")
         logger.info(
             f"Uploaded {len(data_younger_than_8_hours)} to {jsonblob.name} --"
-            f" fraction of uploaded/processed {zero_div(len(data_younger_than_8_hours), count)}"
+            f" fraction of uploaded/processed {zero_div(len(data_younger_than_8_hours), len(json_data))}"
         )
