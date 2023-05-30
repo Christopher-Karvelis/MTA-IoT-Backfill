@@ -46,8 +46,6 @@ class AzureFunctionStreaming:
 
         timescale_client = TimeScaleClient(connection=conn)
 
-        logger.info(f"Name: {jsonblob.name}  " f"Blob Size: {jsonblob.length} bytes  ")
-
         json_data = json.load(jsonblob)
         values = []
         rejected_by_streaming = []
@@ -73,38 +71,24 @@ class AzureFunctionStreaming:
                     )
                 )
                 if type(entry["measurement_value"]) == str:
-                    if plant not in not_numbers_per_power_plant:
-                        not_numbers_per_power_plant[plant] = [
-                            entry["measurement_value"]
-                        ]
-                    else:
-                        not_numbers_per_power_plant[plant].append(
-                            entry["measurement_value"]
-                        )
+                    not_numbers_per_power_plant[
+                        plant
+                    ] = not_numbers_per_power_plant.get(plant, []) + [
+                        entry["measurement_value"]
+                    ]
 
                 if pd.to_datetime(entry["ts"]).to_pydatetime() <= time_now - timedelta(
                     hours=self.time_accepted
                 ):
-                    if plant not in time_too_old_per_power_plant:
-                        time_too_old_per_power_plant[plant] = 1
-                    else:
-                        time_too_old_per_power_plant[plant] += 1
+                    time_too_old_per_power_plant[plant] = (
+                        time_too_old_per_power_plant.get(plant, 0) + 1
+                    )
 
             except KeyError:
                 rejected_by_streaming.append(entry)
 
         if len(rejected_by_streaming) > 0:
             await self.rejected_signals_blob_writer.upload_blob(rejected_by_streaming)
-
-        logger.info(f"Total numbers processed in Blob {len(json_data)}")
-        logger.info(f"Number of values processed per plant {plants_processed}")
-        logger.info(
-            f"Number of values rejected i.e. not in our signal list {len(rejected_by_streaming)}"
-        )
-        logger.info(f"Data in blob is not a number {not_numbers_per_power_plant}")
-        logger.info(
-            f"Data in blob rejected because older then {self.time_accepted} hours {time_too_old_per_power_plant}"
-        )
 
         unique = list(set(values))
         remove_nan = [i for i in unique if type(i[2]) != str]
@@ -124,8 +108,16 @@ class AzureFunctionStreaming:
         def zero_div(x, y):
             return y and x / y or 0
 
-        logger.info(f"Uploading blob {jsonblob.name} was successful")
         logger.info(
-            f"Uploaded {len(data_younger_than_8_hours)} to {jsonblob.name} --"
-            f" fraction of uploaded/processed {zero_div(len(data_younger_than_8_hours), len(json_data))}"
+            f"Name: {jsonblob.name}  "
+            f"Blob Size: {jsonblob.length} bytes \n"
+            f"Total numbers processed in Blob {len(json_data)} \n"
+            f"Number of values processed per plant {plants_processed} \n"
+            f"Number of values rejected i.e. not in our signal list {len(rejected_by_streaming)} \n "
+            f"Data in blob is not a number {not_numbers_per_power_plant} \n "
+            f"Data in blob rejected because older then {self.time_accepted} "
+            f"hours {time_too_old_per_power_plant} \n "
+            f"Uploading blob {jsonblob.name} was successful \n"
+            f"Uploaded {len(data_younger_than_8_hours)} to {jsonblob.name} -- "
+            f"fraction of uploaded/processed {zero_div(len(data_younger_than_8_hours), len(json_data))}"
         )
