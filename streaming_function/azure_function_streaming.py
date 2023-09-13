@@ -36,7 +36,7 @@ class AzureFunctionStreaming:
         self.port = os.getenv("TIMESCALE_PORT")
         self.dbname = os.getenv("TIMESCALE_DATABASE_NAME")
 
-        self.time_accepted = 8
+        self.time_accepted = 24
 
     async def input(self, jsonblob: func.InputStream):
 
