@@ -60,11 +60,7 @@ stages:
     steps:
       - task: ManualValidation@0
         timeoutInMinutes: 1440 # task times out in 1 day
-        inputs:
-          notifyUsers: |
-            emanuel.joos@axpo.com
-          instructions: 'Please validate the build configuration and resume'
-          onTimeout: 'resume'
+
 
 - stage: Deploy_Streaming_Stage
   dependsOn: [Request_Deployment_Streaming_STAGE]
@@ -80,9 +76,9 @@ stages:
         imageName: 'axh4nonprod4shared4cr.azurecr.io/$(dockerImageName):$(TAG)'
         appSettings: >-
           -TIMESCALE_USERNAME @Microsoft.KeyVault(VaultName=axh-stage-appl-analy-kv;SecretName=axh-stage-appl-timescale-username-secret)
-          -TIMESCALE_HOST_URL "axh-nonprod-appl-timescale-db-axpo-c52c.a.timescaledb.io"
+          -TIMESCALE_HOST_URL "axh-stage-appl-timescale-db-axpo-c52c.a.timescaledb.io"
           -TIMESCALE_PORT 27992
-          -TIMESCALE_DATABASE_NAME "dev_iot_db"
+          -TIMESCALE_DATABASE_NAME "axh-stage-appl-iot-db"
           -TIMESCALE_PASSWORD @Microsoft.KeyVault(VaultName=axh-stage-appl-analy-kv;SecretName=axh-stage-appl-timescale-pw-secret)
           -ASSET_API_BASE "https://axh-stage-appl-app-asset-api.azurewebsites.net"
           -API_CLIENT_ID "azure-func-stage"
@@ -140,11 +136,6 @@ stages:
     steps:
       - task: ManualValidation@0
         timeoutInMinutes: 1440 # task times out in 1 day
-        inputs:
-          notifyUsers: |
-            emanuel.joos@axpo.com
-          instructions: 'Please validate the build configuration and resume'
-          onTimeout: 'resume'
 
 - stage: Deploy_Streaming_Prod
   dependsOn: [Request_Deployment_Streaming_Prod]
