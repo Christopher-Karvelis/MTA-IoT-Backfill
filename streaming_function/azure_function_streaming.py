@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-from datetime import datetime, timedelta, timezone
 
 import asyncpg
 import azure.functions as func
@@ -36,8 +35,6 @@ class AzureFunctionStreaming:
         self.port = os.getenv("TIMESCALE_PORT")
         self.dbname = os.getenv("TIMESCALE_DATABASE_NAME")
 
-        self.time_accepted = 24
-
     async def input(self, jsonblob: func.InputStream):
 
         conn = await asyncpg.connect(
@@ -51,8 +48,6 @@ class AzureFunctionStreaming:
         rejected_by_streaming = []
         plants_processed = {}
         not_numbers_per_power_plant = {}
-        time_now = datetime.now(timezone.utc)
-        time_too_old_per_power_plant = {}
         for entry in json_data:
             control_system_identifier = entry["control_system_identifier"]
             plant = entry["plant"]
@@ -77,13 +72,6 @@ class AzureFunctionStreaming:
                         entry["measurement_value"]
                     ]
 
-                if pd.to_datetime(entry["ts"]).to_pydatetime() <= time_now - timedelta(
-                    hours=self.time_accepted
-                ):
-                    time_too_old_per_power_plant[plant] = (
-                        time_too_old_per_power_plant.get(plant, 0) + 1
-                    )
-
             except KeyError:
                 rejected_by_streaming.append(entry)
 
@@ -92,15 +80,10 @@ class AzureFunctionStreaming:
 
         unique = list(set(values))
         remove_nan = [i for i in unique if type(i[2]) != str]
-        data_younger_than_8_hours = [
-            i
-            for i in remove_nan
-            if i[0] > time_now - timedelta(hours=self.time_accepted)
-        ]
 
         await timescale_client.create_temporary_table()
         await timescale_client.copy_records_to_temporary_table(
-            data=data_younger_than_8_hours
+            data=remove_nan
         )
         await timescale_client.load_temporary_table_to_measurements()
         await conn.close()
@@ -110,7 +93,6 @@ class AzureFunctionStreaming:
 
         plants_processed_reformatted = [{key: value} for key, value in plants_processed.items()]
         not_numbers_per_power_plant_reformatted = [{key: value} for key, value in not_numbers_per_power_plant.items()]
-        time_too_old_per_power_plant_reformatted = [{key: value} for key, value in time_too_old_per_power_plant.items()]
 
         logger.info(
             f"Name: {jsonblob.name}  "
@@ -119,9 +101,7 @@ class AzureFunctionStreaming:
             f"Number of values processed per plant {plants_processed_reformatted} \n"
             f"Number of values rejected i.e. not in our signal list {len(rejected_by_streaming)} \n "
             f"Data in blob is not a number {not_numbers_per_power_plant_reformatted} \n "
-            f"Data in blob rejected because older then {self.time_accepted} "
-            f"hours {time_too_old_per_power_plant_reformatted} \n "
             f"Uploading blob {jsonblob.name} was successful \n"
-            f"Uploaded {len(data_younger_than_8_hours)} to {jsonblob.name} -- "
-            f"fraction of uploaded/processed {zero_div(len(data_younger_than_8_hours), len(json_data))}"
+            f"Uploaded {len(remove_nan)} to {jsonblob.name} -- "
+            f"fraction of uploaded/processed {zero_div(len(remove_nan), len(json_data))}"
         )
