@@ -132,7 +132,7 @@ class AzureFunctionStreaming:
             f"Data in blob is not a number {not_numbers_per_power_plant_reformatted} \n "
             f"Data in blob rejected because older then {self.time_accepted} "
             f"hours {time_too_old_per_power_plant_reformatted} \n "
-            f"Data in blob causing warnings because older then {self.time_warning} "
+            f"Data in blob is older than {self.time_warning} "
             f"hours {time_warning_per_power_plant_reformatted} \n "
             f"Uploading blob {jsonblob.name} was successful \n"
             f"Uploaded {len(data_within_acceptable_timespan)} to {jsonblob.name} -- "
