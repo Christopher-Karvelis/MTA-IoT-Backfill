@@ -36,7 +36,7 @@ class AzureFunctionStreaming:
         self.port = os.getenv("TIMESCALE_PORT")
         self.dbname = os.getenv("TIMESCALE_DATABASE_NAME")
 
-        self.time_accepted = 24
+        self.time_accepted = 24 * 30
 
     async def input(self, jsonblob: func.InputStream):
 
@@ -92,7 +92,7 @@ class AzureFunctionStreaming:
 
         unique = list(set(values))
         remove_nan = [i for i in unique if type(i[2]) != str]
-        data_younger_than_8_hours = [
+        data_within_acceptable_timespan = [
             i
             for i in remove_nan
             if i[0] > time_now - timedelta(hours=self.time_accepted)
@@ -100,7 +100,7 @@ class AzureFunctionStreaming:
 
         await timescale_client.create_temporary_table()
         await timescale_client.copy_records_to_temporary_table(
-            data=data_younger_than_8_hours
+            data=data_within_acceptable_timespan
         )
         await timescale_client.load_temporary_table_to_measurements()
         await conn.close()
@@ -122,6 +122,6 @@ class AzureFunctionStreaming:
             f"Data in blob rejected because older then {self.time_accepted} "
             f"hours {time_too_old_per_power_plant_reformatted} \n "
             f"Uploading blob {jsonblob.name} was successful \n"
-            f"Uploaded {len(data_younger_than_8_hours)} to {jsonblob.name} -- "
-            f"fraction of uploaded/processed {zero_div(len(data_younger_than_8_hours), len(json_data))}"
+            f"Uploaded {len(data_within_acceptable_timespan)} to {jsonblob.name} -- "
+            f"fraction of uploaded/processed {zero_div(len(data_within_acceptable_timespan), len(json_data))}"
         )
