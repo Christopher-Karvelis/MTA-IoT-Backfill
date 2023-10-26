@@ -1,0 +1,12 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "jsonblob",
+      "type": "blobTrigger",
+      "direction": "in",
+      "path": "backfill/{name}",
+      "connection": "AzureWebJobsStorage"
+    }
+  ]
+}
