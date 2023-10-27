@@ -1,7 +1,8 @@
+import datetime
 import logging
 import os
 
-from azure.storage.blob import BlobServiceClient
+from azure.storage.blob import BlobServiceClient, BlobClient, generate_blob_sas, BlobSasPermissions
 
 
 class BlobStorageCopier:
@@ -41,9 +42,28 @@ class BlobStorageCopier:
                 self._copy_blob(blob)
 
     def _copy_blob(self, blob):
-        blob_url = self.source_container_client.get_blob_client(blob["name"]).url
+        source_blob_client = self.source_container_client.get_blob_client(blob["name"])
+        sas_token = create_service_sas_blob(source_blob_client, self.source_blob_service_client.credential.account_key)
+        blob_url = f"{source_blob_client.url}?{sas_token}"
         copy_blob = self.target_container_client.get_blob_client(blob["name"])
         copy_blob.start_copy_from_url(blob_url)
+
+
+def create_service_sas_blob(blob_client: BlobClient, account_key: str):
+    start_time = datetime.datetime.now(datetime.timezone.utc)
+    expiry_time = start_time + datetime.timedelta(days=30)
+
+    sas_token = generate_blob_sas(
+        account_name=blob_client.account_name,
+        container_name=blob_client.container_name,
+        blob_name=blob_client.blob_name,
+        account_key=account_key,
+        permission=BlobSasPermissions(read=True),
+        expiry=expiry_time,
+        start=start_time
+    )
+
+    return sas_token
 
 
 
