@@ -52,7 +52,7 @@ class AzureFunctionStreaming:
         rejected_by_streaming = []
         plants_processed = {}
         not_numbers_per_power_plant = {}
-        time_too_old_per_power_plant = {}
+        time_not_in_range_considered = {}
         for entry in json_data:
             control_system_identifier = entry["control_system_identifier"]
             plant = entry["plant"]
@@ -61,9 +61,10 @@ class AzureFunctionStreaming:
             else:
                 plants_processed[plant] += 1
             try:
+                datetime_of_entry = pd.to_datetime(entry["ts"])
                 values.append(
                     (
-                        pd.to_datetime(entry["ts"]).to_pydatetime(),
+                        datetime_of_entry.to_pydatetime(),
                         self.hash_table.loc[
                             hash(control_system_identifier + plant)
                         ].values[0],
@@ -77,9 +78,9 @@ class AzureFunctionStreaming:
                         entry["measurement_value"]
                     ]
 
-                if pd.to_datetime(entry["ts"]).to_pydatetime() <= date_accepted_start:
-                    time_too_old_per_power_plant[plant] = (
-                        time_too_old_per_power_plant.get(plant, 0) + 1
+                if datetime_of_entry.to_pydatetime() <= date_accepted_start or datetime_of_entry.to_pydatetime() > date_accepted_end:
+                    time_not_in_range_considered[plant] = (
+                        time_not_in_range_considered.get(plant, 0) + 1
                     )
 
             except KeyError:
@@ -105,7 +106,7 @@ class AzureFunctionStreaming:
 
         plants_processed_reformatted = [{key: value} for key, value in plants_processed.items()]
         not_numbers_per_power_plant_reformatted = [{key: value} for key, value in not_numbers_per_power_plant.items()]
-        time_too_old_per_power_plant_reformatted = [{key: value} for key, value in time_too_old_per_power_plant.items()]
+        time_too_old_per_power_plant_reformatted = [{key: value} for key, value in time_not_in_range_considered.items()]
 
 
         logger.info(
