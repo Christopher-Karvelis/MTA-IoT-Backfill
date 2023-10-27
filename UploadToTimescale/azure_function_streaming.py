@@ -49,7 +49,6 @@ class AzureFunctionStreaming:
         rejected_by_streaming = []
         plants_processed = {}
         not_numbers_per_power_plant = {}
-        time_now = datetime.now(timezone.utc)
         time_too_old_per_power_plant = {}
         for entry in json_data:
             control_system_identifier = entry["control_system_identifier"]
