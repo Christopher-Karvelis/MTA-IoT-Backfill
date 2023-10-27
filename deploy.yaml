@@ -2,7 +2,7 @@ variables:
 - name: vmImageName
   value: 'ubuntu-latest'
 - name: dockerImageName
-  value: axh-timescale-streaming
+  value: axh-timescale-backfill
 - name: TAG
   value: '$(Build.SourceVersion)'
 
@@ -72,7 +72,7 @@ stages:
     - task: AzureFunctionAppContainer@1
       inputs:
         azureSubscription: terraform_nonprod_spi
-        appName: axh-stage-appl-streaming-func
+        appName: axh-stage-appl-iotback-func
         imageName: 'axh4nonprod4shared4cr.azurecr.io/$(dockerImageName):$(TAG)'
         appSettings: >-
           -TIMESCALE_USERNAME @Microsoft.KeyVault(VaultName=axh-stage-appl-analy-kv;SecretName=axh-stage-appl-timescale-username-secret)
@@ -84,7 +84,6 @@ stages:
           -API_CLIENT_ID "azure-func-stage"
           -API_CLIENT_SECRET @Microsoft.KeyVault(VaultName=axh-stage-appl-analy-kv;SecretName=axh-stage-appl-analy-azure-func-api-client-secret)
           -PYTHONHASHSEED 0
-          -AZURE_CONTAINER_NAME "axh-rejected-signals"
           
 
 # ***************** PROD ****************************
@@ -147,7 +146,7 @@ stages:
     - task: AzureFunctionAppContainer@1
       inputs:
         azureSubscription: terraform_prod_spi
-        appName: axh-prod-appl-streaming-func
+        appName: axh-prod-appl-iotback-func
         imageName: 'axh4prod4shared4cr.azurecr.io/$(dockerImageName):$(TAG)'
         appSettings: >-
           -TIMESCALE_USERNAME @Microsoft.KeyVault(VaultName=axh-prod-appl-analy-kv;SecretName=axh-prod-appl-timescale-username-secret)
@@ -159,4 +158,3 @@ stages:
           -API_CLIENT_ID "azure-func-prod"
           -API_CLIENT_SECRET @Microsoft.KeyVault(VaultName=axh-prod-appl-analy-kv;SecretName=axh-prod-appl-analy-azure-func-api-client-secret)
           -PYTHONHASHSEED 0
-          -AZURE_CONTAINER_NAME "axh-rejected-signals"
