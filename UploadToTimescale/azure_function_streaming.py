@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 import asyncpg
 import azure.functions as func
@@ -19,7 +19,9 @@ logger.setLevel(logging.INFO)
 
 
 def produce_data_accepted_start_end(date_accepted: datetime):
-    return date_accepted.replace(hour=0, minute=0, second=0, microsecond=0), date_accepted.replace(hour=23, minute=59, second=59, microsecond=999999)
+    return date_accepted.replace(hour=0, minute=0, second=0, microsecond=0).replace(
+        tzinfo=timezone.utc), date_accepted.replace(hour=23, minute=59, second=59, microsecond=999999).replace(
+        tzinfo=timezone.utc)
 
 
 class AzureFunctionStreaming:
@@ -29,7 +31,6 @@ class AzureFunctionStreaming:
         self.hash_table = signal_client.provide_hash_table()
         self.hash_table.to_csv("Signal_Hash_Table.csv")
         logger.info("Signal Table Loaded")
-
 
         # Timescale
         self.password = os.getenv("TIMESCALE_PASSWORD")
@@ -107,7 +108,6 @@ class AzureFunctionStreaming:
         plants_processed_reformatted = [{key: value} for key, value in plants_processed.items()]
         not_numbers_per_power_plant_reformatted = [{key: value} for key, value in not_numbers_per_power_plant.items()]
         time_too_old_per_power_plant_reformatted = [{key: value} for key, value in time_not_in_range_considered.items()]
-
 
         logger.info(
             f"Name: {jsonblob.name}  "
