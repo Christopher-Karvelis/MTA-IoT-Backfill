@@ -116,7 +116,7 @@ class AzureFunctionStreaming:
             f"Number of values processed per plant {plants_processed_reformatted} \n"
             f"Number of values rejected i.e. not in our signal list {len(rejected_by_streaming)} \n "
             f"Data in blob is not a number {not_numbers_per_power_plant_reformatted} \n "
-            f"Data in blob rejected because older than {self.date_accepted} "
+            f"Data in blob rejected because older than {date_accepted} "
             f"hours {time_too_old_per_power_plant_reformatted} \n "
             f"Uploading blob {jsonblob.name} was successful \n"
             f"Uploaded {len(data_within_acceptable_timespan)} to {jsonblob.name} -- "
