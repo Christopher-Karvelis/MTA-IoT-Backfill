@@ -1,14 +1,13 @@
 import json
 import logging
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 import asyncpg
 import azure.functions as func
 import pandas as pd
 from dotenv import load_dotenv
 
-from UploadToTimescale.blob_storge_writer import BlobStorageWriter
 from UploadToTimescale.signal_client import SignalClient
 from UploadToTimescale.timescale_client import TimeScaleClient
 
@@ -27,7 +26,6 @@ class AzureFunctionStreaming:
         self.hash_table.to_csv("Signal_Hash_Table.csv")
         logger.info("Signal Table Loaded")
 
-        self.rejected_signals_blob_writer = BlobStorageWriter(logger=logger)
 
         # Timescale
         self.password = os.getenv("TIMESCALE_PASSWORD")
@@ -81,9 +79,6 @@ class AzureFunctionStreaming:
 
             except KeyError:
                 rejected_by_streaming.append(entry)
-
-        if len(rejected_by_streaming) > 0:
-            await self.rejected_signals_blob_writer.upload_blob(rejected_by_streaming)
 
         unique = list(set(values))
         remove_nan = [i for i in unique if type(i[2]) != str]
