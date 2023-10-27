@@ -5,19 +5,25 @@ from azure.storage.blob import BlobServiceClient
 
 
 class BlobStorageCopier:
-    def __init__(self, source_container_name = "axh-opcpublisher", target_container_name="backfill"):
+    def __init__(self, source_container_name="axh-opcpublisher", target_container_name="backfill"):
         self.source_container_name = source_container_name
         self.target_container_name = target_container_name
-        connection_string = os.getenv("AzureWebJobsStorage")
-        self.blob_service_client = BlobServiceClient.from_connection_string(
-            connection_string
+
+        source_connection_string = os.getenv("SOURCE_STORAGE_ACCOUNT_CONNECTION_STRING")
+        self.source_blob_service_client = BlobServiceClient.from_connection_string(
+            source_connection_string
         )
 
-        self.source_container_client = self.blob_service_client.get_container_client(
+        target_connection_string = os.getenv("AzureWebJobsStorage")
+        self.target_blob_service_client = BlobServiceClient.from_connection_string(
+            target_connection_string
+        )
+
+        self.source_container_client = self.source_blob_service_client.get_container_client(
             container=self.source_container_name
         )
 
-        self.target_container_client = self.blob_service_client.get_container_client(
+        self.target_container_client = self.target_blob_service_client.get_container_client(
             container=target_container_name
         )
 
