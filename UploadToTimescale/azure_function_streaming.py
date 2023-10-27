@@ -36,10 +36,7 @@ class AzureFunctionStreaming:
         self.port = os.getenv("TIMESCALE_PORT")
         self.dbname = os.getenv("TIMESCALE_DATABASE_NAME")
 
-        # check this date, hardcoded to fix the production issues on this date
-        self.date_accepted = datetime(2023, 10, 22)
-
-    async def input(self, jsonblob: func.InputStream):
+    async def input(self, jsonblob: func.InputStream, date_accepted=datetime(2023, 10, 22)):
 
         conn = await asyncpg.connect(
             f"postgres://{self.username}:{self.password}@{self.host}:{self.port}/{self.dbname}"
@@ -78,7 +75,7 @@ class AzureFunctionStreaming:
                         entry["measurement_value"]
                     ]
 
-                if pd.to_datetime(entry["ts"]).to_pydatetime() <= self.date_accepted:
+                if pd.to_datetime(entry["ts"]).to_pydatetime() <= date_accepted:
                     time_too_old_per_power_plant[plant] = (
                         time_too_old_per_power_plant.get(plant, 0) + 1
                     )
@@ -94,7 +91,7 @@ class AzureFunctionStreaming:
         data_within_acceptable_timespan = [
             i
             for i in remove_nan
-            if i[0] > self.date_accepted
+            if i[0] > date_accepted
         ]
 
         await timescale_client.create_temporary_table()
