@@ -1,5 +1,3 @@
-import datetime
-import json
 import logging
 import os
 
@@ -26,7 +24,7 @@ class BlobStorageCopier:
         try:
             self.target_container_client.create_container()
         except Exception as e:
-            self.logger.info(
+            logging.info(
                 f"Probably container {target_container_name} already exists, failed with Exception {e}"
             )
 
