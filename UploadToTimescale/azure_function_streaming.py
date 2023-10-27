@@ -18,6 +18,10 @@ logger.setLevel(logging.ERROR)
 logger.setLevel(logging.INFO)
 
 
+def produce_data_accepted_start_end(date_accepted: datetime):
+    return date_accepted.replace(hour=0, minute=0, second=0, microsecond=0), date_accepted.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+
 class AzureFunctionStreaming:
     def __init__(self) -> None:
         # Load data
@@ -35,6 +39,7 @@ class AzureFunctionStreaming:
         self.dbname = os.getenv("TIMESCALE_DATABASE_NAME")
 
     async def input(self, jsonblob: func.InputStream, date_accepted=datetime(2023, 10, 22)):
+        date_accepted_start, date_accepted_end = produce_data_accepted_start_end(date_accepted)
 
         conn = await asyncpg.connect(
             f"postgres://{self.username}:{self.password}@{self.host}:{self.port}/{self.dbname}"
@@ -72,7 +77,7 @@ class AzureFunctionStreaming:
                         entry["measurement_value"]
                     ]
 
-                if pd.to_datetime(entry["ts"]).to_pydatetime() <= date_accepted:
+                if pd.to_datetime(entry["ts"]).to_pydatetime() <= date_accepted_start:
                     time_too_old_per_power_plant[plant] = (
                         time_too_old_per_power_plant.get(plant, 0) + 1
                     )
@@ -85,7 +90,7 @@ class AzureFunctionStreaming:
         data_within_acceptable_timespan = [
             i
             for i in remove_nan
-            if i[0] > date_accepted
+            if date_accepted_start < i[0] < date_accepted_end
         ]
 
         await timescale_client.create_temporary_table()
@@ -110,7 +115,7 @@ class AzureFunctionStreaming:
             f"Number of values processed per plant {plants_processed_reformatted} \n"
             f"Number of values rejected i.e. not in our signal list {len(rejected_by_streaming)} \n "
             f"Data in blob is not a number {not_numbers_per_power_plant_reformatted} \n "
-            f"Data in blob rejected because older than {date_accepted} "
+            f"Data in blob rejected because older than {date_accepted_start} "
             f"hours {time_too_old_per_power_plant_reformatted} \n "
             f"Uploading blob {jsonblob.name} was successful \n"
             f"Uploaded {len(data_within_acceptable_timespan)} to {jsonblob.name} -- "
