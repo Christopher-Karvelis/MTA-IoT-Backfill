@@ -1,4 +1,4 @@
-from Triggerer.blob_storage_copier import BlobStorageCopier
+from CopyBlobs.blob_storage_copier import BlobStorageCopier
 
 
 def move_blobs(inputParameters: dict) -> str:

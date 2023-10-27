@@ -16,5 +16,10 @@
       "type": "http",
       "direction": "out"
     },
+    {
+      "name": "starter",
+      "type": "durableClient",
+      "direction": "in"
+    }
   ]
 }
