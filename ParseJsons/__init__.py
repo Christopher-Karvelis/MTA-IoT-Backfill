@@ -21,18 +21,20 @@ def main(inputParameters: dict) -> str:
     parsed_input = inputParameters['ts_start'].split('T')
     date = parsed_input[0]
     hour = parsed_input[1][:2]
-    pattern_to_read = f"abfs://axh-opcpublisher/{date}/{hour}/*.json"
+    #put axh-opcpublisher instead of backfill for real stuff
+    pattern_to_read = f"abfs://backfill/{date}/{hour}/*.json"
     logging.info(f"will try to read {pattern_to_read=}")
     ddf = dd.read_json(pattern_to_read, storage_options=storage_options, lines=False)
     ddf = ddf.repartition(npartitions=10)
+    # I am confused why this log takes so long to appear even without compute. are we loading everything into memory?
     #ddf = ddf.compute()
-    print(f"Now I have all the data {pattern_to_read=}")
     logging.info(f"No I have all the data for {pattern_to_read=}")
     ddf["hash_key"] = ddf["control_system_identifier"] + ddf["plant"]
     ddf["signal_id"] = ddf["hash_key"].map(lambda x: signal_hash_table[x], meta=('signal_id', 'i8'))
     ddf = ddf.rename(columns={"measurement_value": "value"})
+    dd.to_parquet(ddf, path=f"abfs://backfill/{date}T{hour}", storage_options=target_storage_options)
+
     ddf = ddf[["signal_id", "ts", "value"]]
-    #dd.to_parquet(ddf, path=f"abfs://backfill/{date}T{hour}", storage_options=target_storage_options)
     # todo: filter not a number
     # todo: filter time
 
