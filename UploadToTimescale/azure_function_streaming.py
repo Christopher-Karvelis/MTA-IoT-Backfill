@@ -8,8 +8,8 @@ import azure.functions as func
 import pandas as pd
 from dotenv import load_dotenv
 
-from UploadToTimescale.signal_client import SignalClient
-from UploadToTimescale.timescale_client import TimeScaleClient
+from InitializeSignalHashTable.signal_client import SignalClient
+from ParseJsons.timescale_client import TimeScaleClient
 
 load_dotenv()
 

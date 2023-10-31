@@ -62,7 +62,7 @@ class SignalClient:
 
         return pd.concat(signal_list, ignore_index=True)
 
-    def provide_hash_table(self) -> pd.DataFrame:
+    def provide_hash_table(self) -> dict:
         reduced_sensor_data = self._signals[self._columns_to_keep]
         reduced_sensor_data_1 = reduced_sensor_data.copy()
         reduced_sensor_data_1["Unique"] = (
@@ -70,9 +70,4 @@ class SignalClient:
             + reduced_sensor_data["plant"]
         )
         reduced_sensor_data_2 = reduced_sensor_data_1.copy()
-        reduced_sensor_data_2["Hash"] = reduced_sensor_data_1["Unique"].apply(hash)
-        return pd.DataFrame(
-            index=reduced_sensor_data_2["Hash"],
-            columns=["signal_id"],
-            data=reduced_sensor_data_2["signal_id"].values,
-        )
+        return dict(zip(reduced_sensor_data_2["Unique"], reduced_sensor_data_2["signal_id"]))

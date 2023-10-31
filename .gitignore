@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+signal_dictionary.json
+Signal_Hash_Table.csv
+
 .idea
 
 # C extensions
