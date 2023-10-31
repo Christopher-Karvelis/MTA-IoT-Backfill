@@ -9,7 +9,7 @@ import azure.durable_functions as df
 def orchestrator_function(context: df.DurableOrchestrationContext):
     user_input = context.get_input()
 
-    yield context.call_activity("InitializeSignalHashTable", input_=user_input)
+    #yield context.call_activity("InitializeSignalHashTable", input_=user_input)
 
 
     chunked_timespan = chunk_timespan(user_input)
