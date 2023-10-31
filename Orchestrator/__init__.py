@@ -9,6 +9,8 @@ import azure.durable_functions as df
 def orchestrator_function(context: df.DurableOrchestrationContext):
     user_input = context.get_input()
 
+    # this has to happen: create table _hack_backfill (like measurements including all)
+
     #yield context.call_activity("InitializeSignalHashTable", input_=user_input)
 
 

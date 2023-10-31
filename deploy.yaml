@@ -83,8 +83,8 @@ stages:
           -ASSET_API_BASE "https://axh-stage-appl-app-asset-api.azurewebsites.net"
           -API_CLIENT_ID "azure-func-stage"
           -API_CLIENT_SECRET @Microsoft.KeyVault(VaultName=axh-stage-appl-analy-kv;SecretName=axh-stage-appl-analy-azure-func-api-client-secret)
-          -PYTHONHASHSEED 0
           -SOURCE_STORAGE_ACCOUNT_CONNECTION_STRING @Microsoft.KeyVault(VaultName=axh-stage-appl-analy-kv;SecretName=hack-streaming-storage-connection-string)
+          -FUNCTIONS_WORKER_PROCESS_COUNT 4
           
 
 # ***************** PROD ****************************
@@ -158,5 +158,5 @@ stages:
           -ASSET_API_BASE "https://axh-prod-appl-app-asset-api.azurewebsites.net"
           -API_CLIENT_ID "azure-func-prod"
           -API_CLIENT_SECRET @Microsoft.KeyVault(VaultName=axh-prod-appl-analy-kv;SecretName=axh-prod-appl-analy-azure-func-api-client-secret)
-          -PYTHONHASHSEED 0
           -SOURCE_STORAGE_ACCOUNT_CONNECTION_STRING @Microsoft.KeyVault(VaultName=axh-prod-appl-analy-kv;SecretName=hack-streaming-storage-connection-string)
+          -FUNCTIONS_WORKER_PROCESS_COUNT 4

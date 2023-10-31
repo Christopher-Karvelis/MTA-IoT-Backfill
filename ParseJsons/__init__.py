@@ -24,13 +24,17 @@ def main(inputParameters: dict) -> str:
     pattern_to_read = f"abfs://axh-opcpublisher/{date}/{hour}/*.json"
     logging.info(f"will try to read {pattern_to_read=}")
     ddf = dd.read_json(pattern_to_read, storage_options=storage_options, lines=False)
+    ddf = ddf.repartition(npartitions=10)
+    #ddf = ddf.compute()
+    print(f"Now I have all the data {pattern_to_read=}")
+    logging.info(f"No I have all the data for {pattern_to_read=}")
     ddf["hash_key"] = ddf["control_system_identifier"] + ddf["plant"]
     ddf["signal_id"] = ddf["hash_key"].map(lambda x: signal_hash_table[x], meta=('signal_id', 'i8'))
     ddf = ddf.rename(columns={"measurement_value": "value"})
     ddf = ddf[["signal_id", "ts", "value"]]
-    dd.to_parquet(ddf, path=f"abfs://backfill/{date}T{hour}", storage_options=target_storage_options)
-    print(f"read for {pattern_to_read=} {len(ddf)=}")
-    print(f"read for {pattern_to_read=} {ddf.head()=}")
+    #dd.to_parquet(ddf, path=f"abfs://backfill/{date}T{hour}", storage_options=target_storage_options)
+    # todo: filter not a number
+    # todo: filter time
 
     password = os.getenv("TIMESCALE_PASSWORD")
     username = os.getenv("TIMESCALE_USERNAME")
@@ -39,6 +43,7 @@ def main(inputParameters: dict) -> str:
     dbname = os.getenv("TIMESCALE_DATABASE_NAME")
 
 
+    #print(f"ready to upload {pattern_to_read=}")
     uri = f"postgresql://{username}:{password}@{host}:{port}/{dbname}"
     dd.to_sql(ddf, "_hack_backfill", if_exists="append", index=False, uri=uri, method=postgres_upsert, parallel=True)
     return "Success"
