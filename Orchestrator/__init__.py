@@ -1,6 +1,5 @@
 import azure.durable_functions as df
 
-
 import datetime
 
 import azure.durable_functions as df
@@ -11,8 +10,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
 
     # this has to happen: create table _hack_backfill (like measurements including all)
 
-    # yield context.call_activity("InitializeSignalHashTable", input_=user_input)
-
+    staging_table_name = yield context.call_activity("InitializeSignalHashTable", input_=user_input)
 
     chunked_timespan = chunk_timespan(user_input)
     retry_once_a_minute_three_times = df.RetryOptions(60_000, 3)
@@ -20,12 +18,17 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     tasks = [
         context.call_activity(
             "ParseJsons",
-            #retry_options=retry_once_a_minute_three_times,
-            input_={**user_input, **timespan},
-    )
+            # retry_options=retry_once_a_minute_three_times,
+            input_={**user_input, **timespan, "staging_table_name": staging_table_name},
+        )
         for timespan in chunked_timespan
     ]
     yield context.task_all(tasks)
+
+    yield context.call_activity(
+        "DecompressBackfill", input_={"staging_table_name": staging_table_name}
+    )
+
     return "Success"
 
 
@@ -33,8 +36,8 @@ main = df.Orchestrator.create(orchestrator_function)
 
 
 def chunk_timespan(
-    timespan,
-    chunk_size_in_hours=1,
+        timespan,
+        chunk_size_in_hours=1,
 ):
     datetime_from = datetime.datetime.fromisoformat(timespan["ts_start"])
     datetime_to = datetime.datetime.fromisoformat(timespan["ts_end"])
@@ -46,4 +49,3 @@ def chunk_timespan(
         periods.append({"ts_start": period_start.isoformat(), "ts_end": period_end.isoformat()})
         period_start = period_end
     return periods
-

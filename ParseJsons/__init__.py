@@ -46,8 +46,8 @@ async def main(inputParameters: dict) -> str:
     )
 
     timescale_client = TimeScaleClient(connection=conn)
-    await timescale_client.copy_many_to_table(table_name="_hack_backfill", data=list(df.itertuples(index=False, name=None)))
-
+    await timescale_client.copy_many_to_table(table_name=inputParameters["staging_table_name"], data=list(df.itertuples(index=False, name=None)))
+    await conn.close()
     return "Success"
 
 

@@ -10,7 +10,7 @@ async def load_one_hour_of_data_starting_at(date, hour):
     storage_options = {"connection_string": os.getenv("SOURCE_STORAGE_ACCOUNT_CONNECTION_STRING")}
 
     # put axh-opcpublisher instead of backfill for real stuff
-    pattern_to_read = f"{date}/{hour}"
+    pattern_to_read = f"{date}/{hour}/01"
 
     result = await get_data(storage_options, pattern_to_read)
     return result
