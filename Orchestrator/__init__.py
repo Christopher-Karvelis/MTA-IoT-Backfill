@@ -11,7 +11,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
 
     # this has to happen: create table _hack_backfill (like measurements including all)
 
-    yield context.call_activity("InitializeSignalHashTable", input_=user_input)
+    # yield context.call_activity("InitializeSignalHashTable", input_=user_input)
 
 
     chunked_timespan = chunk_timespan(user_input)

@@ -24,13 +24,13 @@ async def get_data(storage_options, pattern_to_read):
 
     # this sucks a bit, because by getting everything and then doing
     blobs_with_start_to_consider = source_container_client.list_blobs(name_starts_with=pattern_to_read)
-    tasks = [download_blob(blob, source_container_client) async for blob in blobs_with_start_to_consider if blob["name"].endswith("json")]
+    tasks = [download_blob(blob["name"], source_container_client) async for blob in blobs_with_start_to_consider if blob["name"].endswith("json")]
     results = await asyncio.gather(*tasks)
     return results
 
 
-async def download_blob(blob, container_client):
-    blob_client = container_client.get_blob_client(blob["name"])
+async def download_blob(blob_name, container_client):
+    blob_client = container_client.get_blob_client(blob_name)
 
     blob_response = await blob_client.download_blob()
     blob_content = await blob_response.readall()
