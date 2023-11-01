@@ -96,7 +96,7 @@ class AzureFunctionStreaming:
         ]
 
         await timescale_client.create_temporary_table()
-        await timescale_client.copy_records_to_temporary_table(
+        await timescale_client.copy_many_to_table(
             data=data_within_acceptable_timespan
         )
         await timescale_client.load_temporary_table_to_measurements()

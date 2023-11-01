@@ -10,8 +10,8 @@ class TimeScaleClient:
         )"""
         )
 
-    async def copy_records_to_temporary_table(self, data):
-        await self.connection.copy_records_to_table("_data", records=data)
+    async def copy_many_to_table(self, data, table_name):
+        await self.connection.copy_records_to_table(table_name=table_name, records=data)
 
     async def load_temporary_table_to_measurements(self):
         await self.connection.execute(
