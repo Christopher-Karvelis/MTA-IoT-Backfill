@@ -1,4 +1,10 @@
+import datetime
+
 DECOMPRESS_BACKFILL_ADVISORY_LOCK = 345678
+
+
+def _produce_day_after_day_to_backfill(day_to_backfill):
+    return (datetime.date.fromisoformat(day_to_backfill) + datetime.timedelta(days=1)).isoformat()
 
 
 class TimeScaleClient:
@@ -21,7 +27,8 @@ class TimeScaleClient:
     async def copy_many_to_table(self, data, table_name):
         await self.connection.copy_records_to_table(table_name=table_name, records=data)
 
-    async def decompress_backfill(self, staging_table_name, destination_table_name):
+    async def decompress_backfill(self, day_to_backfill, staging_table_name, destination_table_name):
+        day_after_day_to_backfill = _produce_day_after_day_to_backfill(day_to_backfill)
         # make sure you fix the stuff at the bottom with the time ranges...
         try:
             await self.connection.execute(f"select pg_advisory_lock({DECOMPRESS_BACKFILL_ADVISORY_LOCK});")
@@ -38,7 +45,7 @@ class TimeScaleClient:
 
                             PERFORM alter_job(compression_job_id, scheduled => false);
                             PERFORM decompress_chunk(i, if_compressed => true)
-                                FROM show_chunks('{destination_table_name}', older_than => '2023-10-25', newer_than => '2023-10-24') i;
+                                FROM show_chunks('{destination_table_name}', older_than => '{day_after_day_to_backfill}', newer_than => '{day_to_backfill}') i;
                             INSERT INTO {destination_table_name}
                                 SELECT * from {staging_table_name}
                                 ON CONFLICT DO NOTHING;

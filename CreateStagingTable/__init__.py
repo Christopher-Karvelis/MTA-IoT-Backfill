@@ -17,11 +17,8 @@ async def main(inputParameters: dict) -> str:
      f"postgres://{username}:{password}@{host}:{port}/{dbname}"
     )
 
-
-    #careful sql injection'
-    #start_ = inputParameters['ts_start']
-    start_ = "2023-10-24"
-    staging_table_name = f"_backfill_{start_}".replace("-", "_").replace(":", "_").replace("+", "_").replace(":", "_").replace("T", "_")
+    staging_table_name = f"_backfill_{inputParameters['day_to_backfill']}".replace("-", "_").replace(":", "_").replace(
+        "+", "_").replace(":", "_").replace("T", "_")
     timescale_client = TimeScaleClient(connection=conn)
     await timescale_client.create_staging_table(staging_table_name)
 
