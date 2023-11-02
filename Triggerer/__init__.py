@@ -7,11 +7,7 @@ import azure.functions as func
 
 from Triggerer.input_structure import InputParameters
 
-bp = df.Blueprint()
 
-
-@bp.route("/backfill/trigger", auth_level=func.AuthLevel.ANONYMOUS, methods=[func.HttpMethod.POST])
-@bp.durable_client_input(client_name="starter")
 async def main(req: func.HttpRequest, starter: str) -> func.HttpResponse:
     client = df.DurableOrchestrationClient(starter)
 
