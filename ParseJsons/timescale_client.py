@@ -23,7 +23,7 @@ class TimeScaleClient:
     async def decompress_backfill(self, staging_table_name, destination_table_name):
         #            select pg_advisory_lock({DECOMPRESS_BACKFILL_ADVISORY_LOCK});
         #             select pg_advisory_unlock({DECOMPRESS_BACKFILL_ADVISORY_LOCK});
-
+        # make sure you fix the stuff at the bottom with the time ranges...
         await self.connection.execute(
             f"""
             DO $BODY$

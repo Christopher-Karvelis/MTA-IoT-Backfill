@@ -14,12 +14,15 @@ async def main(inputParameters: dict) -> str:
     dbname = os.getenv("TIMESCALE_DATABASE_NAME")
 
     conn = await asyncpg.connect(
-        f"postgres://{username}:{password}@{host}:{port}/{dbname}"
+     f"postgres://{username}:{password}@{host}:{port}/{dbname}"
     )
 
-    staging_table_name = inputParameters["staging_table_name"]
-    timescale_client = TimeScaleClient(connection=conn)
-    await timescale_client.decompress_backfill(staging_table_name, "measurements")
-    await timescale_client.drop_staging_table(staging_table_name)
 
-    return "SUCCESS"
+    #careful sql injection'
+    #start_ = inputParameters['ts_start']
+    start_ = "2023-10-24"
+    staging_table_name = f"_backfill_{start_}".replace("-", "_").replace(":", "_").replace("+", "_").replace(":", "_").replace("T", "_")
+    timescale_client = TimeScaleClient(connection=conn)
+    await timescale_client.create_staging_table(staging_table_name)
+
+    return staging_table_name
