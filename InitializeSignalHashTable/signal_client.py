@@ -70,4 +70,6 @@ class SignalClient:
             + reduced_sensor_data["plant"]
         )
         reduced_sensor_data_2 = reduced_sensor_data_1.copy()
-        return dict(zip(reduced_sensor_data_2["Unique"], reduced_sensor_data_2["signal_id"]))
+        return dict(
+            zip(reduced_sensor_data_2["Unique"], reduced_sensor_data_2["signal_id"])
+        )

@@ -4,7 +4,9 @@ DECOMPRESS_BACKFILL_ADVISORY_LOCK = 345678
 
 
 def _produce_day_after_day_to_backfill(day_to_backfill):
-    return (datetime.date.fromisoformat(day_to_backfill) + datetime.timedelta(days=1)).isoformat()
+    return (
+        datetime.date.fromisoformat(day_to_backfill) + datetime.timedelta(days=1)
+    ).isoformat()
 
 
 class TimeScaleClient:
@@ -27,11 +29,15 @@ class TimeScaleClient:
     async def copy_many_to_table(self, data, table_name):
         await self.connection.copy_records_to_table(table_name=table_name, records=data)
 
-    async def decompress_backfill(self, day_to_backfill, staging_table_name, destination_table_name):
+    async def decompress_backfill(
+        self, day_to_backfill, staging_table_name, destination_table_name
+    ):
         day_after_day_to_backfill = _produce_day_after_day_to_backfill(day_to_backfill)
         # make sure you fix the stuff at the bottom with the time ranges...
         try:
-            await self.connection.execute(f"select pg_advisory_lock({DECOMPRESS_BACKFILL_ADVISORY_LOCK});")
+            await self.connection.execute(
+                f"select pg_advisory_lock({DECOMPRESS_BACKFILL_ADVISORY_LOCK});"
+            )
             await self.connection.execute(
                 f"""
                         DO $BODY$
@@ -56,7 +62,9 @@ class TimeScaleClient:
                         """
             )
         finally:
-            await self.connection.execute(f"select pg_advisory_unlock({DECOMPRESS_BACKFILL_ADVISORY_LOCK});")
+            await self.connection.execute(
+                f"select pg_advisory_unlock({DECOMPRESS_BACKFILL_ADVISORY_LOCK});"
+            )
 
             # https://docs.timescale.com/mst/latest/troubleshooting/
 

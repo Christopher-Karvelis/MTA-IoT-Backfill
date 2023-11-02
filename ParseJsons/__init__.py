@@ -7,9 +7,8 @@ from typing import List
 import pandas as pd
 from azure.storage.blob.aio import BlobServiceClient
 
-from ParseJsons.load_data import load_one_hour_of_data_starting_at, download_string_blob
-from ParseJsons.move_blobs_to_backfill_container import move_blobs
-from ParseJsons.timescale_client import TimeScaleClient
+from ParseJsons.load_data import (download_string_blob,
+                                  load_one_hour_of_data_starting_at)
 
 
 async def main(inputParameters: dict) -> List[str]:
@@ -19,16 +18,18 @@ async def main(inputParameters: dict) -> List[str]:
     blob_service_client = BlobServiceClient.from_connection_string(
         target_connection_string
     )
-    container_client = blob_service_client.get_container_client(
-        container="backfill"
+    container_client = blob_service_client.get_container_client(container="backfill")
+    blob_name = "signal_hash_table"
+    signal_hash_table = json.load(
+        await download_string_blob(blob_name, container_client)
     )
-    blob_name = f'signal_hash_table'
-    signal_hash_table = json.load(await download_string_blob(blob_name, container_client))
 
     # this is kind of a hack. better: turn the string into a datetime before hand.
     # Then extract the information in the loading function
-    parsed_input = inputParameters['ts_start'].split('T')
-    raw_data, read_from = await load_one_hour_of_data_starting_at(date=parsed_input[0], hour=parsed_input[1][:2])
+    parsed_input = inputParameters["ts_start"].split("T")
+    raw_data, read_from = await load_one_hour_of_data_starting_at(
+        date=parsed_input[0], hour=parsed_input[1][:2]
+    )
 
     df = turn_result_into_dataframe(raw_data)
 
@@ -41,8 +42,9 @@ async def main(inputParameters: dict) -> List[str]:
         group.to_parquet(parquet_file)
         parquet_file.seek(0)
         parquet_blob_name = f"{group_name.strftime('%Y-%m-%d')}/_from_{read_from}"
-        await container_client.upload_blob(data=parquet_file,
-                                           name=parquet_blob_name, overwrite=True)
+        await container_client.upload_blob(
+            data=parquet_file, name=parquet_blob_name, overwrite=True
+        )
         blobs_to_consider.append(parquet_blob_name)
 
     return blobs_to_consider
@@ -68,4 +70,6 @@ def turn_result_tuple_into_dataframe(result_tuple):
 
 
 def turn_result_into_dataframe(result_tuples):
-    return pd.concat([turn_result_tuple_into_dataframe(result) for result in result_tuples])
+    return pd.concat(
+        [turn_result_tuple_into_dataframe(result) for result in result_tuples]
+    )

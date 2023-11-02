@@ -20,6 +20,8 @@ async def main(req: func.HttpRequest, starter: str) -> func.HttpResponse:
         error_message = "Bad Request: Invalides Json."
         return func.HttpResponse(json.dumps({"error": error_message}), status_code=400)
 
-    instance_id = await client.start_new("Orchestrator", client_input=input_parameters.dict())
+    instance_id = await client.start_new(
+        "Orchestrator", client_input=input_parameters.dict()
+    )
 
     return client.create_check_status_response(req, instance_id)

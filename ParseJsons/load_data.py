@@ -7,7 +7,9 @@ from azure.storage.blob.aio import BlobServiceClient
 
 async def load_one_hour_of_data_starting_at(date, hour):
     # this should not be here...
-    storage_options = {"connection_string": os.getenv("SOURCE_STORAGE_ACCOUNT_CONNECTION_STRING")}
+    storage_options = {
+        "connection_string": os.getenv("SOURCE_STORAGE_ACCOUNT_CONNECTION_STRING")
+    }
 
     # put axh-opcpublisher instead of backfill for real stuff
     pattern_to_read = f"{date}/{hour}"
@@ -23,10 +25,14 @@ async def get_data(storage_options, pattern_to_read):
     source_container_client = blob_service_client.get_container_client("backfill")
 
     # this sucks a bit, because by getting everything and then doing
-    blobs_with_start_to_consider = source_container_client.list_blobs(name_starts_with=pattern_to_read)
-    tasks = [_download_blob_with_name(blob["name"], source_container_client) async for blob in
-             blobs_with_start_to_consider if
-             blob["name"].endswith("json")]
+    blobs_with_start_to_consider = source_container_client.list_blobs(
+        name_starts_with=pattern_to_read
+    )
+    tasks = [
+        _download_blob_with_name(blob["name"], source_container_client)
+        async for blob in blobs_with_start_to_consider
+        if blob["name"].endswith("json")
+    ]
     results = await asyncio.gather(*tasks)
     return results
 
@@ -42,7 +48,7 @@ async def download_string_blob(blob_name, container_client):
     blob_response = await blob_client.download_blob()
     blob_content = await blob_response.readall()
 
-    return io.StringIO(blob_content.decode('utf-8'))
+    return io.StringIO(blob_content.decode("utf-8"))
 
 
 async def download_blob_into_stream(blob_name, container_client):

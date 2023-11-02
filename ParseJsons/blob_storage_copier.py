@@ -2,11 +2,14 @@ import datetime
 import logging
 import os
 
-from azure.storage.blob import BlobServiceClient, BlobClient, generate_blob_sas, BlobSasPermissions
+from azure.storage.blob import (BlobClient, BlobSasPermissions,
+                                BlobServiceClient, generate_blob_sas)
 
 
 class BlobStorageCopier:
-    def __init__(self, source_container_name="axh-opcpublisher", target_container_name="backfill"):
+    def __init__(
+        self, source_container_name="axh-opcpublisher", target_container_name="backfill"
+    ):
         self.source_container_name = source_container_name
         self.target_container_name = target_container_name
 
@@ -20,12 +23,16 @@ class BlobStorageCopier:
             target_connection_string
         )
 
-        self.source_container_client = self.source_blob_service_client.get_container_client(
-            container=self.source_container_name
+        self.source_container_client = (
+            self.source_blob_service_client.get_container_client(
+                container=self.source_container_name
+            )
         )
 
-        self.target_container_client = self.target_blob_service_client.get_container_client(
-            container=target_container_name
+        self.target_container_client = (
+            self.target_blob_service_client.get_container_client(
+                container=target_container_name
+            )
         )
 
         try:
@@ -36,14 +43,18 @@ class BlobStorageCopier:
             )
 
     def copy_blobs(self, ts_start, ts_end):
-        blobs_with_start_to_consider = self.source_container_client.list_blobs(name_starts_with=ts_start[:10])
+        blobs_with_start_to_consider = self.source_container_client.list_blobs(
+            name_starts_with=ts_start[:10]
+        )
         for blob in blobs_with_start_to_consider:
             if blob["name"].endswith("json"):
                 self._copy_blob(blob)
 
     def _copy_blob(self, blob):
         source_blob_client = self.source_container_client.get_blob_client(blob["name"])
-        sas_token = create_service_sas_blob(source_blob_client, self.source_blob_service_client.credential.account_key)
+        sas_token = create_service_sas_blob(
+            source_blob_client, self.source_blob_service_client.credential.account_key
+        )
         blob_url = f"{source_blob_client.url}?{sas_token}"
         copy_blob = self.target_container_client.get_blob_client(blob["name"])
         copy_blob.start_copy_from_url(blob_url)
@@ -60,10 +71,7 @@ def create_service_sas_blob(blob_client: BlobClient, account_key: str):
         account_key=account_key,
         permission=BlobSasPermissions(read=True),
         expiry=expiry_time,
-        start=start_time
+        start=start_time,
     )
 
     return sas_token
-
-
-

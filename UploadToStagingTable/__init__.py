@@ -16,14 +16,13 @@ async def main(inputParameters: str) -> str:
     blob_service_client = BlobServiceClient.from_connection_string(
         target_connection_string
     )
-    container_client = blob_service_client.get_container_client(
-        container="backfill"
+    container_client = blob_service_client.get_container_client(container="backfill")
+    raw_parquet = await download_blob_into_stream(
+        inputParameters["blob_name"], container_client
     )
-    raw_parquet = await download_blob_into_stream(inputParameters["blob_name"], container_client)
 
     df = pd.read_parquet(raw_parquet)
     df = prepare_dataframe(df)
-
 
     password = os.getenv("TIMESCALE_PASSWORD")
     username = os.getenv("TIMESCALE_USERNAME")
@@ -36,7 +35,10 @@ async def main(inputParameters: str) -> str:
     )
 
     timescale_client = TimeScaleClient(connection=conn)
-    await timescale_client.copy_many_to_table(table_name=inputParameters["staging_table_name"], data=list(df.itertuples(index=False, name=None)))
+    await timescale_client.copy_many_to_table(
+        table_name=inputParameters["staging_table_name"],
+        data=list(df.itertuples(index=False, name=None)),
+    )
     await conn.close()
     return "Success"
 
@@ -44,4 +46,3 @@ async def main(inputParameters: str) -> str:
 def prepare_dataframe(df: pd.DataFrame):
     df = df[["ts", "signal_id", "value"]]
     return df
-
