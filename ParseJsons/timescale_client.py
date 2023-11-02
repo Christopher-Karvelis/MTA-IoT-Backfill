@@ -1,3 +1,5 @@
+DECOMPRESS_BACKFILL_ADVISORY_LOCK = 345678
+
 class TimeScaleClient:
     def __init__(self, connection):
         self.connection = connection
@@ -7,50 +9,46 @@ class TimeScaleClient:
         await self.connection.execute(
             f"""create table IF NOT EXISTS {staging_table_name} (like measurements excluding indexes excluding constraints)"""
         )
+        #we could add a constraint here on the datetimes...
+        #CREATE TABLE your_table (
+  #  id serial PRIMARY KEY,
+  #  event_time timestamp,
+  #  CONSTRAINT event_time_range_check CHECK (event_time >= '2023-01-01 00:00:00' AND event_time <= '2023-12-31 23:59:59')
+#);
 
     async def copy_many_to_table(self, data, table_name):
         await self.connection.copy_records_to_table(table_name=table_name, records=data)
 
-    async def load_temporary_table_to_measurements(self):
-        await self.connection.execute(
-            """
-            INSERT INTO {table}(ts, signal_id, value)
-            SELECT * FROM _data
-            ON CONFLICT (signal_id,ts)
-            DO NOTHING
-        """.format(
-                table="measurements"
-            )
-        )
 
     async def decompress_backfill(self, staging_table_name, destination_table_name):
+        #            select pg_advisory_lock({DECOMPRESS_BACKFILL_ADVISORY_LOCK});
+        #             select pg_advisory_unlock({DECOMPRESS_BACKFILL_ADVISORY_LOCK});
+
         await self.connection.execute(
             f"""
-
             DO $BODY$
             DECLARE
-                compress_after interval;
-                prev_schedule_interval interval;
+                compression_job_id int;
             BEGIN
-                SELECT json_extract_path(config::json, 'compress_after')::text::interval INTO compress_after FROM timescaledb_information.jobs WHERE
-                    proc_name = 'policy_compression' AND
-                    hypertable_name  = '{destination_table_name}';
-
-                SELECT schedule_interval::text::interval INTO prev_schedule_interval FROM timescaledb_information.jobs WHERE
-                    proc_name = 'policy_compression' AND
-                    hypertable_name  = '{destination_table_name}';
-
-                PERFORM remove_compression_policy('{destination_table_name}', if_exists => true);
-
-                CALL decompress_backfill(staging_table := '{staging_table_name}', destination_hypertable := '{destination_table_name}', on_conflict_action := 'NOTHING');
-
-                PERFORM add_compression_policy('{destination_table_name}', compress_after => compress_after, schedule_interval => prev_schedule_interval);
-            END;
-            $BODY$;
+                SELECT j.job_id INTO compression_job_id
+                    FROM timescaledb_information.jobs j
+                    WHERE j.proc_name = 'policy_compression'
+                        AND j.hypertable_name = '{destination_table_name}';
+            
+                PERFORM alter_job(compression_job_id, scheduled => false);
+                PERFORM decompress_chunk(i, if_compressed => true)
+                    FROM show_chunks('{destination_table_name}', older_than => '2023-10-25', newer_than => '2023-10-24') i;
+                INSERT INTO {destination_table_name}
+                    SELECT * from {staging_table_name}
+                    ON CONFLICT DO NOTHING;
+                PERFORM alter_job(compression_job_id, scheduled => false);
+                CALL run_job(compression_job_id);
+            END
+            $BODY$
             """
         )
-        # see: https://dev.azure.com/Axpo-AXP/AXH-Secret-Module-Development/_git/AXH-Asset-API/commit/d9f1142a4e40e6a0eea85866a8c49af723d74dc9?refName=refs/heads/master&path=/iot_api/app/services/measurement_service/measurement_service.py
-        # see: https://github.com/timescale/timescaledb-extras/issues/28
+
+        #https://docs.timescale.com/mst/latest/troubleshooting/
 
 
 
