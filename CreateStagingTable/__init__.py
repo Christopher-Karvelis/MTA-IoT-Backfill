@@ -3,7 +3,7 @@ import os
 import asyncpg
 
 # this shouldn't be done, it should be imported from shared
-from ParseJsons import TimeScaleClient
+from ParseJsons.timescale_client import TimeScaleClient
 
 
 async def main(inputParameters: dict) -> str:
