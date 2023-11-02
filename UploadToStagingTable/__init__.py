@@ -1,12 +1,11 @@
 import logging
 import os
 
-import asyncpg
 import pandas as pd
 from azure.storage.blob.aio import BlobServiceClient
 
 from ParseJsons.load_data import download_blob_into_stream
-from ParseJsons.timescale_client import TimeScaleClient
+from shared.timescale_client import TimeScaleClient
 
 
 async def main(inputParameters: str) -> str:
@@ -24,17 +23,7 @@ async def main(inputParameters: str) -> str:
     df = pd.read_parquet(raw_parquet)
     df = prepare_dataframe(df)
 
-    password = os.getenv("TIMESCALE_PASSWORD")
-    username = os.getenv("TIMESCALE_USERNAME")
-    host = os.getenv("TIMESCALE_HOST_URL")
-    port = os.getenv("TIMESCALE_PORT")
-    dbname = os.getenv("TIMESCALE_DATABASE_NAME")
-
-    conn = await asyncpg.connect(
-        f"postgres://{username}:{password}@{host}:{port}/{dbname}"
-    )
-
-    timescale_client = TimeScaleClient(connection=conn)
+    timescale_client = await TimeScaleClient.from_env_vars()
     await timescale_client.copy_many_to_table(
         table_name=inputParameters["staging_table_name"],
         data=list(df.itertuples(index=False, name=None)),

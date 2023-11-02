@@ -1,36 +1,57 @@
 import datetime
+import os
+
+import asyncpg
 
 DECOMPRESS_BACKFILL_ADVISORY_LOCK = 345678
 
 
 def _produce_day_after_day_to_backfill(day_to_backfill):
     return (
-        datetime.date.fromisoformat(day_to_backfill) + datetime.timedelta(days=1)
+            datetime.date.fromisoformat(day_to_backfill) + datetime.timedelta(days=1)
     ).isoformat()
+
+def _produce_staging_table_name(day_to_backfill):
+    return  (
+        f"_backfill_{day_to_backfill}"
+        .replace("-", "_")
+        .replace(":", "_")
+        .replace("+", "_")
+        .replace(":", "_")
+        .replace("T", "_")
+    )
 
 
 class TimeScaleClient:
     def __init__(self, connection):
         self.connection = connection
 
-    async def create_staging_table(self, staging_table_name):
-        """This is needed in order to be able to upsert data. Sometimes values come with duplication"""
-        await self.connection.execute(
-            f"""create table IF NOT EXISTS {staging_table_name} (like measurements excluding indexes excluding constraints)"""
+    @classmethod
+    async def from_env_vars(cls):
+        password = os.getenv("TIMESCALE_PASSWORD")
+        username = os.getenv("TIMESCALE_USERNAME")
+        host = os.getenv("TIMESCALE_HOST_URL")
+        port = os.getenv("TIMESCALE_PORT")
+        dbname = os.getenv("TIMESCALE_DATABASE_NAME")
+        connection = await asyncpg.connect(
+            f"postgres://{username}:{password}@{host}:{port}/{dbname}"
         )
-        # we could add a constraint here on the datetimes...
-        # CREATE TABLE your_table (
+        return cls(connection)
 
-    #  id serial PRIMARY KEY,
-    #  event_time timestamp,
-    #  CONSTRAINT event_time_range_check CHECK (event_time >= '2023-01-01 00:00:00' AND event_time <= '2023-12-31 23:59:59')
-    # );
+    async def create_staging_table(self, day_to_backfill):
+        day_after_day_to_backfill = _produce_day_after_day_to_backfill(day_to_backfill)
+        staging_table_name = _produce_staging_table_name(day_to_backfill)
+        await self.connection.execute(
+            f"""create table IF NOT EXISTS {staging_table_name} (like measurements excluding indexes excluding constraints,
+             constraint time_range_check CHECK (ts >= '{day_to_backfill}' and ts < '{day_after_day_to_backfill}'))"""
+        )
+
 
     async def copy_many_to_table(self, data, table_name):
         await self.connection.copy_records_to_table(table_name=table_name, records=data)
 
     async def decompress_backfill(
-        self, day_to_backfill, staging_table_name, destination_table_name
+            self, day_to_backfill, staging_table_name, destination_table_name
     ):
         day_after_day_to_backfill = _produce_day_after_day_to_backfill(day_to_backfill)
         # make sure you fix the stuff at the bottom with the time ranges...
@@ -65,8 +86,6 @@ class TimeScaleClient:
             await self.connection.execute(
                 f"select pg_advisory_unlock({DECOMPRESS_BACKFILL_ADVISORY_LOCK});"
             )
-
-            # https://docs.timescale.com/mst/latest/troubleshooting/
 
     async def drop_staging_table(self, staging_table_name):
         await self.connection.execute(
