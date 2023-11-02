@@ -10,10 +10,10 @@ async def load_one_hour_of_data_starting_at(date, hour):
     storage_options = {"connection_string": os.getenv("SOURCE_STORAGE_ACCOUNT_CONNECTION_STRING")}
 
     # put axh-opcpublisher instead of backfill for real stuff
-    pattern_to_read = f"{date}/{hour}/01"
+    pattern_to_read = f"{date}/{hour}"
 
     result = await get_data(storage_options, pattern_to_read)
-    return result
+    return result, pattern_to_read
 
 
 async def get_data(storage_options, pattern_to_read):
@@ -24,9 +24,15 @@ async def get_data(storage_options, pattern_to_read):
 
     # this sucks a bit, because by getting everything and then doing
     blobs_with_start_to_consider = source_container_client.list_blobs(name_starts_with=pattern_to_read)
-    tasks = [download_blob(blob["name"], source_container_client) async for blob in blobs_with_start_to_consider if blob["name"].endswith("json")]
+    tasks = [_download_blob_with_name(blob["name"], source_container_client) async for blob in blobs_with_start_to_consider if
+             blob["name"].endswith("json")]
     results = await asyncio.gather(*tasks)
     return results
+
+
+async def _download_blob_with_name(blob_name, container_client):
+    data = await download_blob(blob_name, container_client)
+    return blob_name, data
 
 
 async def download_blob(blob_name, container_client):
