@@ -13,7 +13,8 @@ class TestGrouping:
                            "value": [1, 2, 3, 4]})
 
         mock_container = mocker.AsyncMock()
-        await upload_data.upload_grouped_as_parquet(mock_container, df, "read_from")
+        result = await upload_data.upload_grouped_as_parquet(mock_container, df, "read_from")
+        assert result == ["2020-10-10/_from_read_from", "2020-10-11/_from_read_from", "2020-10-12/_from_read_from"]
 
         assert mock_container.upload_blob.call_count == 3
 
