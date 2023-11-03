@@ -1,25 +1,14 @@
-import json
-import os
-
-from azure.storage.blob import BlobServiceClient
-
 from InitializeSignalHashTable.signal_client import SignalClient
+from shared.azure_blob import get_backfilling_container_client
+from shared.signal_hash_table import SignalHashTablePersistence
 
 
 async def main(inputParameters: dict) -> str:
-    target_connection_string = os.getenv("AzureWebJobsStorage")
+    # it is not ideal to block like this in an async function
+    hash_table = SignalClient().provide_hash_table()
 
-    signal_client = SignalClient()
-    hash_table = signal_client.provide_hash_table()
+    container_client = get_backfilling_container_client()
+    signal_hash_table_persistence = SignalHashTablePersistence(container_client)
+    await signal_hash_table_persistence.upload_signal_hash_table(hash_table)
 
-    blob_service_client = BlobServiceClient.from_connection_string(
-        target_connection_string
-    )
-    container_client = blob_service_client.get_container_client(container="backfill")
-    blob_name = "signal_hash_table"
-    blob_client = container_client.get_blob_client(blob=blob_name)
-
-    data = json.dumps(hash_table)
-
-    blob_client.upload_blob(data, overwrite=True)
-    return "wat"
+    return "Success"

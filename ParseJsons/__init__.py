@@ -1,30 +1,18 @@
-import json
-import logging
-import os
 from io import BytesIO
 from typing import List
 
 import pandas as pd
-from azure.storage.blob.aio import BlobServiceClient
 
-from ParseJsons.load_data import download_string_blob, load_one_hour_of_data_starting_at
+from ParseJsons.load_data import load_one_hour_of_data_starting_at
+from shared.azure_blob import get_backfilling_container_client
+from shared.signal_hash_table import SignalHashTablePersistence
 
 
 async def main(inputParameters: dict) -> List[str]:
-    logging.info(f"Running with {inputParameters=}")
-    target_connection_string = os.getenv("AzureWebJobsStorage")
+    container_client = get_backfilling_container_client()
+    signal_hash_table_persistence = SignalHashTablePersistence(container_client)
+    signal_hash_table = await signal_hash_table_persistence.download_signal_hash_table()
 
-    blob_service_client = BlobServiceClient.from_connection_string(
-        target_connection_string
-    )
-    container_client = blob_service_client.get_container_client(container="backfill")
-    blob_name = "signal_hash_table"
-    signal_hash_table = json.load(
-        await download_string_blob(blob_name, container_client)
-    )
-
-    # this is kind of a hack. better: turn the string into a datetime before hand.
-    # Then extract the information in the loading function
     parsed_input = inputParameters["ts_start"].split("T")
     raw_data, read_from = await load_one_hour_of_data_starting_at(
         date=parsed_input[0], hour=parsed_input[1][:2]

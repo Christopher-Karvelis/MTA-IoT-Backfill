@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from azure.storage.blob.aio import BlobServiceClient
 
-from ParseJsons.load_data import download_blob_into_stream
+from shared.azure_blob import download_blob_into_stream
 from shared.timescale_client import TimeScaleClient
 
 
@@ -24,11 +24,11 @@ async def main(inputParameters: str) -> str:
     df = prepare_dataframe(df)
 
     timescale_client = TimeScaleClient.from_env_vars()
-    async with timescale_client.connect():
-        await timescale_client.copy_many_to_table(
-            table_name=inputParameters["staging_table_name"],
-            data=list(df.itertuples(index=False, name=None)),
-        )
+    await timescale_client.connect()
+    await timescale_client.copy_many_to_table(
+        table_name=inputParameters["staging_table_name"],
+        data=list(df.itertuples(index=False, name=None)),
+    )
     return "Success"
 
 

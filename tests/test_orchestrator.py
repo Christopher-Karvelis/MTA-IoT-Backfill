@@ -1,6 +1,7 @@
 import pytest
 
-from Orchestrator import orchestrator_function, produce_grouped_and_filtered_inputs
+from Orchestrator import (orchestrator_function,
+                          produce_grouped_and_filtered_inputs)
 
 
 @pytest.fixture

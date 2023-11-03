@@ -41,13 +41,10 @@ class TimeScaleClient:
     @asynccontextmanager
     async def connect(self):
         try:
-            self.connection = await asyncpg.connect(
-                self.uri
-            )
+            self.connection = await asyncpg.connect(self.uri)
             yield
         finally:
             await self.connection.close()
-
 
     async def create_staging_table(self, day_to_backfill):
         day_after_day_to_backfill = _produce_day_after_day_to_backfill(day_to_backfill)

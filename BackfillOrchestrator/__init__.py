@@ -2,7 +2,6 @@ import azure.durable_functions as df
 
 
 def orchestrator_function(context: df.DurableOrchestrationContext):
-    # can we make this a typed dict or something?
     day_to_backfill = context.get_input()["day_to_backfill"]
     blob_names = context.get_input()["blob_names"]
 
