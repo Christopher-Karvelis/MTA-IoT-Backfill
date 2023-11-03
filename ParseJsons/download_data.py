@@ -1,6 +1,6 @@
 import asyncio
 
-from shared.azure_blob import download_string_blob, get_source_container_client
+from utils.azure_blob import download_string_blob, get_source_container_client
 
 
 async def load_one_hour_of_data_starting_at(date, hour):

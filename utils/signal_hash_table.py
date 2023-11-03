@@ -1,6 +1,6 @@
 import json
 
-from shared.azure_blob import download_string_blob
+from utils.azure_blob import download_string_blob
 
 BLOB_NAME = "signal_hash_table"
 

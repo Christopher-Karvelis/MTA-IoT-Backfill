@@ -1,4 +1,4 @@
-from shared.timescale_client import TimeScaleClient
+from utils.timescale_client import TimeScaleClient
 
 
 async def main(inputParameters: dict) -> str:

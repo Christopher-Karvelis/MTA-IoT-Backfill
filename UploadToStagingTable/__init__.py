@@ -4,8 +4,8 @@ import os
 import pandas as pd
 from azure.storage.blob.aio import BlobServiceClient
 
-from shared.azure_blob import download_blob_into_stream
-from shared.timescale_client import TimeScaleClient
+from utils.azure_blob import download_blob_into_stream
+from utils.timescale_client import TimeScaleClient
 
 
 async def main(inputParameters: str) -> str:

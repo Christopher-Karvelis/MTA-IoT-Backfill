@@ -1,6 +1,6 @@
-from io import BytesIO
-
 import pandas as pd
+
+from utils.azure_blob import upload_parquet
 
 
 def group_by_day_with_names(df, read_from):
@@ -17,11 +17,3 @@ async def upload_grouped_as_parquet(container_client, df, read_from):
     return [group_with_name[0] for group_with_name in grouped_by_day_with_names]
 
 
-async def upload_parquet(container_client, group, parquet_blob_name):
-    parquet_file = BytesIO()
-    group.to_parquet(parquet_file)
-    parquet_file.seek(0)
-    # I need to put some async with's
-    await container_client.upload_blob(
-        data=parquet_file, name=parquet_blob_name, overwrite=True
-    )

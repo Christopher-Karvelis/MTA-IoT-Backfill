@@ -1,5 +1,6 @@
 import io
 import os
+from io import BytesIO
 
 from azure.storage.blob.aio import BlobServiceClient
 
@@ -36,3 +37,13 @@ async def download_blob_into_stream(blob_name, container_client):
 
     await blob_response.readinto(bytes_io)
     return bytes_io
+
+
+async def upload_parquet(container_client, group, parquet_blob_name):
+    parquet_file = BytesIO()
+    group.to_parquet(parquet_file)
+    parquet_file.seek(0)
+    # I need to put some async with's
+    await container_client.upload_blob(
+        data=parquet_file, name=parquet_blob_name, overwrite=True
+    )

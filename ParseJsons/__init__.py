@@ -5,8 +5,8 @@ import pandas as pd
 from ParseJsons.download_data import load_one_hour_of_data_starting_at
 
 from ParseJsons.upload_data import upload_grouped_as_parquet
-from shared.azure_blob import get_backfilling_container_client
-from shared.signal_hash_table import SignalHashTablePersistence
+from utils.azure_blob import get_backfilling_container_client
+from utils.signal_hash_table import SignalHashTablePersistence
 
 
 async def main(inputParameters: dict) -> List[str]:

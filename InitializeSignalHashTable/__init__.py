@@ -1,6 +1,6 @@
 from InitializeSignalHashTable.signal_client import SignalClient
-from shared.azure_blob import get_backfilling_container_client
-from shared.signal_hash_table import SignalHashTablePersistence
+from utils.azure_blob import get_backfilling_container_client
+from utils.signal_hash_table import SignalHashTablePersistence
 
 
 async def main(inputParameters: dict) -> str:
