@@ -62,7 +62,6 @@ class TimeScaleClient:
         self, day_to_backfill, staging_table_name, destination_table_name
     ):
         day_after_day_to_backfill = _produce_day_after_day_to_backfill(day_to_backfill)
-        # make sure you fix the stuff at the bottom with the time ranges...
         try:
             await self.connection.execute(
                 f"select pg_advisory_lock({DECOMPRESS_BACKFILL_ADVISORY_LOCK});"
