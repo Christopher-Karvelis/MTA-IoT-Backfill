@@ -23,20 +23,24 @@ def _produce_staging_table_name(day_to_backfill):
 
 
 class TimeScaleClient:
-    def __init__(self, connection):
-        self.connection = connection
+    def __init__(self, uri):
+        self.uri = uri
+        self.connection = None
 
     @classmethod
-    async def from_env_vars(cls):
+    def from_env_vars(cls):
         password = os.getenv("TIMESCALE_PASSWORD")
         username = os.getenv("TIMESCALE_USERNAME")
         host = os.getenv("TIMESCALE_HOST_URL")
         port = os.getenv("TIMESCALE_PORT")
         dbname = os.getenv("TIMESCALE_DATABASE_NAME")
-        connection = await asyncpg.connect(
-            f"postgres://{username}:{password}@{host}:{port}/{dbname}"
+        uri = f"postgres://{username}:{password}@{host}:{port}/{dbname}"
+        return cls(uri)
+
+    async def connect(self):
+        self.connection = await asyncpg.connect(
+            self.uri
         )
-        return cls(connection)
 
     async def create_staging_table(self, day_to_backfill):
         day_after_day_to_backfill = _produce_day_after_day_to_backfill(day_to_backfill)
@@ -45,6 +49,7 @@ class TimeScaleClient:
             f"""create table IF NOT EXISTS {staging_table_name} (like measurements excluding indexes excluding constraints,
              constraint time_range_check CHECK (ts >= '{day_to_backfill}' and ts < '{day_after_day_to_backfill}'))"""
         )
+        return staging_table_name
 
     async def copy_many_to_table(self, data, table_name):
         await self.connection.copy_records_to_table(table_name=table_name, records=data)
