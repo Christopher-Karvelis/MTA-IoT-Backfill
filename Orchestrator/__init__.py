@@ -70,7 +70,7 @@ def produce_grouped_and_filtered_inputs(timespan, blobs_to_consider):
         <= datetime.datetime.fromisoformat(day)
         <= datetime_to
     ]
-    return [
+    assembled_with_blob_names = [
         {
             "day_to_backfill": date_part,
             "blob_names": [
@@ -79,6 +79,8 @@ def produce_grouped_and_filtered_inputs(timespan, blobs_to_consider):
         }
         for date_part in date_parts_within_timespan
     ]
+    assembled_with_blob_names.sort(key=lambda x: x["day_to_backfill"])
+    return assembled_with_blob_names
 
 
 def _convert_timespan_to_datetimes(timespan):

@@ -7,8 +7,7 @@ from typing import List
 import pandas as pd
 from azure.storage.blob.aio import BlobServiceClient
 
-from ParseJsons.load_data import (download_string_blob,
-                                  load_one_hour_of_data_starting_at)
+from ParseJsons.load_data import download_string_blob, load_one_hour_of_data_starting_at
 
 
 async def main(inputParameters: dict) -> List[str]:

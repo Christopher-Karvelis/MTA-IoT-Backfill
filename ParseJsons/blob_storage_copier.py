@@ -2,8 +2,12 @@ import datetime
 import logging
 import os
 
-from azure.storage.blob import (BlobClient, BlobSasPermissions,
-                                BlobServiceClient, generate_blob_sas)
+from azure.storage.blob import (
+    BlobClient,
+    BlobSasPermissions,
+    BlobServiceClient,
+    generate_blob_sas,
+)
 
 
 class BlobStorageCopier:
