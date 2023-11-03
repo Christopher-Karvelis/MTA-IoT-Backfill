@@ -24,11 +24,11 @@ async def main(inputParameters: str) -> str:
     df = prepare_dataframe(df)
 
     timescale_client = TimeScaleClient.from_env_vars()
-    await timescale_client.connect()
-    await timescale_client.copy_many_to_table(
-        table_name=inputParameters["staging_table_name"],
-        data=list(df.itertuples(index=False, name=None)),
-    )
+    with timescale_client.connect():
+        await timescale_client.copy_many_to_table(
+            table_name=inputParameters["staging_table_name"],
+            data=list(df.itertuples(index=False, name=None)),
+        )
     return "Success"
 
 
