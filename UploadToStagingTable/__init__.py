@@ -33,6 +33,6 @@ async def main(inputParameters: str) -> str:
 
 
 def prepare_dataframe(df: pd.DataFrame):
-    # todo: filter not a number
     df = df[["ts", "signal_id", "value"]]
+    df = df.dropna()
     return df
