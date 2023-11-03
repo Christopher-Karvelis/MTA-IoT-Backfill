@@ -1,5 +1,6 @@
 import datetime
 import os
+from contextlib import asynccontextmanager
 
 import asyncpg
 
@@ -37,10 +38,16 @@ class TimeScaleClient:
         uri = f"postgres://{username}:{password}@{host}:{port}/{dbname}"
         return cls(uri)
 
+    @asynccontextmanager
     async def connect(self):
-        self.connection = await asyncpg.connect(
-            self.uri
-        )
+        try:
+            self.connection = await asyncpg.connect(
+                self.uri
+            )
+            yield
+        finally:
+            await self.connection.close()
+
 
     async def create_staging_table(self, day_to_backfill):
         day_after_day_to_backfill = _produce_day_after_day_to_backfill(day_to_backfill)
