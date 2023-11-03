@@ -1,9 +1,10 @@
-from io import BytesIO
 from typing import List
 
 import pandas as pd
 
-from ParseJsons.load_data import load_one_hour_of_data_starting_at
+from ParseJsons.download_data import load_one_hour_of_data_starting_at
+
+from ParseJsons.upload_data import upload_grouped_as_parquet
 from shared.azure_blob import get_backfilling_container_client
 from shared.signal_hash_table import SignalHashTablePersistence
 
@@ -23,17 +24,7 @@ async def main(inputParameters: dict) -> List[str]:
     # this is blocking and takes a long time, that is no bueno for async
     df = prepare_dataframe(df, signal_hash_table)
 
-    blobs_to_consider = []
-    for group_name, group in df.groupby(pd.Grouper(key="ts", freq="1d")):
-        parquet_file = BytesIO()
-        group.to_parquet(parquet_file)
-        parquet_file.seek(0)
-        parquet_blob_name = f"{group_name.strftime('%Y-%m-%d')}/_from_{read_from}"
-        # I need to put some async with's
-        await container_client.upload_blob(
-            data=parquet_file, name=parquet_blob_name, overwrite=True
-        )
-        blobs_to_consider.append(parquet_blob_name)
+    blobs_to_consider = await upload_grouped_as_parquet(container_client, df, read_from)
 
     return blobs_to_consider
 
