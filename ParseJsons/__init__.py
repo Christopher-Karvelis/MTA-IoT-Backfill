@@ -51,14 +51,11 @@ async def main(inputParameters: dict) -> List[str]:
 
 
 def prepare_dataframe(df: pd.DataFrame, signal_hash_table: dict):
-    # todo: filter not a number
     df["hash_key"] = df["control_system_identifier"] + df["plant"]
     df["signal_id"] = df["hash_key"].map(lambda x: signal_hash_table[x])
     df.drop(columns=["hash_key"], inplace=True)
     df = df.rename(columns={"measurement_value": "value"})
     df["ts"] = pd.to_datetime(df["ts"])
-    # necessary for writing to database
-    # df = df[["ts", "signal_id", "value"]]
     return df
 
 
