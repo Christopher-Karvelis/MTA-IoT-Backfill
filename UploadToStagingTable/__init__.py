@@ -1,21 +1,11 @@
-import logging
-import os
-
 import pandas as pd
-from azure.storage.blob.aio import BlobServiceClient
 
-from utils.azure_blob import download_blob_into_stream
+from utils.azure_blob import download_blob_into_stream, get_backfilling_container_client
 from utils.timescale_client import TimeScaleClient
 
 
-async def main(inputParameters: str) -> str:
-    logging.info(f"Running with {inputParameters=}")
-    target_connection_string = os.getenv("AzureWebJobsStorage")
-
-    blob_service_client = BlobServiceClient.from_connection_string(
-        target_connection_string
-    )
-    container_client = blob_service_client.get_container_client(container="backfill")
+async def main(inputParameters: dict) -> str:
+    container_client = get_backfilling_container_client()
     raw_parquet = await download_blob_into_stream(
         inputParameters["blob_name"], container_client
     )
