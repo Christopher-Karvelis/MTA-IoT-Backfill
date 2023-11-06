@@ -40,10 +40,15 @@ async def download_blob_into_stream(blob_name, container_client):
 
 
 async def upload_parquet(container_client, group, parquet_blob_name):
-    parquet_file = BytesIO()
-    group.to_parquet(parquet_file)
-    parquet_file.seek(0)
+    parquet_file = await _produce_parquet_bytes(group)
     # I need to put some async with's
     await container_client.upload_blob(
         data=parquet_file, name=parquet_blob_name, overwrite=True
     )
+
+
+async def _produce_parquet_bytes(group):
+    parquet_file = BytesIO()
+    group.to_parquet(parquet_file, coerce_timestamps="us", allow_truncated_timestamps=True)
+    parquet_file.seek(0)
+    return parquet_file
