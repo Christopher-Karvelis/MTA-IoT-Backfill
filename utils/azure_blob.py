@@ -16,8 +16,7 @@ def get_source_container_client():
     blob_service_client = BlobServiceClient.from_connection_string(
         os.getenv("SOURCE_STORAGE_ACCOUNT_CONNECTION_STRING")
     )
-    # put axh-opcpublisher instead of backfill for real stuf
-    return blob_service_client.get_container_client("backfill")
+    return blob_service_client.get_container_client("axh-opcpublisher")
 
 
 async def download_string_blob(blob_name, container_client):
@@ -41,7 +40,6 @@ async def download_blob_into_stream(blob_name, container_client):
 
 async def upload_parquet(container_client, group, parquet_blob_name):
     parquet_file = await _produce_parquet_bytes(group)
-    # I need to put some async with's
     await container_client.upload_blob(
         data=parquet_file, name=parquet_blob_name, overwrite=True
     )
