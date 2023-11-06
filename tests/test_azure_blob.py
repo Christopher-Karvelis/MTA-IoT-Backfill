@@ -15,6 +15,7 @@ class TestAzureBlob:
              "2020-10-12T00:00:01.000000000001"]),
             "value": [1, 2, 3, 4]})
 
-        await _produce_parquet_bytes(df)
-        assert True
+        bytes = await _produce_parquet_bytes(df)
+        df_read = pd.read_parquet(bytes)
+        assert len(df_read) == 4
 
