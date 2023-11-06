@@ -31,6 +31,7 @@ async def main(inputParameters: dict) -> List[str]:
 
 def prepare_dataframe(df: pd.DataFrame, signal_hash_table: dict):
     df["hash_key"] = df["control_system_identifier"] + df["plant"]
+    df["hash_key"] = df["hash_key"].str.replace("KWI-WHA", "KWI")
     df["signal_id"] = df["hash_key"].map(lambda x: signal_hash_table[x])
     df.drop(columns=["hash_key"], inplace=True)
     df = df.rename(columns={"measurement_value": "value"})

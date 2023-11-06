@@ -65,6 +65,9 @@ class SignalClient:
     def provide_hash_table(self) -> dict:
         reduced_sensor_data = self._signals[self._columns_to_keep]
         reduced_sensor_data_1 = reduced_sensor_data.copy()
+        # because we renamed this plant....
+        # it uses https://axh-htd.atlassian.net/browse/HID-1339
+        reduced_sensor_data_1["plant"] = reduced_sensor_data_1["plant"].str.replace("KWI-WHA", "KWI")
         reduced_sensor_data_1["Unique"] = (
             reduced_sensor_data["control_system_identifier"]
             + reduced_sensor_data["plant"]
