@@ -9,10 +9,12 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
         "CreateStagingTable", {"day_to_backfill": day_to_backfill}
     )
 
+    retry_once_a_minute_three_times = df.RetryOptions(60_000, 3)
+
     tasks = [
-        context.call_activity(
+        context.call_activity_with_retry(
             "UploadToStagingTable",
-            # retry_options=retry_once_a_minute_three_times,
+            retry_options=retry_once_a_minute_three_times,
             input_={"staging_table_name": staging_table_name, "blob_name": blob_name},
         )
         for blob_name in blob_names

@@ -12,9 +12,9 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     retry_once_a_minute_three_times = df.RetryOptions(60_000, 3)
 
     json_to_parquet_tasks = [
-        context.call_activity(
+        context.call_activity_with_retry(
             "ParseJsons",
-            # retry_options=retry_once_a_minute_three_times,
+            retry_options=retry_once_a_minute_three_times,
             input_={**user_input, **timespan},
         )
         for timespan in chunked_timespan
