@@ -5,11 +5,13 @@ import azure.durable_functions as df
 
 def orchestrator_function(context: df.DurableOrchestrationContext):
     user_input = context.get_input()
+    retry_once_a_minute_three_times = df.RetryOptions(60_000, 3)
 
-    yield context.call_activity("InitializeSignalHashTable", input_=user_input)
+    yield context.call_activity_with_retry("InitializeSignalHashTable",
+                                           input_=user_input,
+                                           retry_options=retry_once_a_minute_three_times)
 
     chunked_timespan = chunk_timespan(user_input)
-    retry_once_a_minute_three_times = df.RetryOptions(60_000, 3)
 
     json_to_parquet_tasks = [
         context.call_activity_with_retry(
@@ -39,8 +41,8 @@ main = df.Orchestrator.create(orchestrator_function)
 
 
 def chunk_timespan(
-    timespan,
-    chunk_size_in_hours=1,
+        timespan,
+        chunk_size_in_hours=1,
 ):
     datetime_from, datetime_to = _convert_timespan_to_datetimes(timespan)
     interval = datetime.timedelta(hours=chunk_size_in_hours)
@@ -67,8 +69,8 @@ def produce_grouped_and_filtered_inputs(timespan, blobs_to_consider):
         day
         for day in date_parts
         if (datetime_from - datetime.timedelta(days=1))
-        <= datetime.datetime.fromisoformat(day)
-        <= datetime_to
+           <= datetime.datetime.fromisoformat(day)
+           <= datetime_to
     ]
     assembled_with_blob_names = [
         {
