@@ -43,7 +43,8 @@ def prepare_dataframe(df: pd.DataFrame, signal_hash_table: dict):
 def turn_result_tuple_into_dataframe(result_tuple):
     df = pd.read_json(result_tuple[1])
     df["source"] = result_tuple[0]
-    df["measurement_value"] = pd.to_numeric(df["measurement_value"], errors="coerce")
+    if len(df) > 0:
+        df["measurement_value"] = pd.to_numeric(df["measurement_value"], errors="coerce")
     return df
 
 
