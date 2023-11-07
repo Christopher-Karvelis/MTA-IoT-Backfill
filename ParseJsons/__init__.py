@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import List
 
 import pandas as pd
@@ -24,6 +25,11 @@ async def main(inputParameters: dict) -> List[str]:
 
     event_loop = asyncio.get_event_loop()
     df = await event_loop.run_in_executor(None, prepare_dataframe, df, signal_hash_table)
+
+    # this is a hack to be really really really sure that it is all numeric
+    df["value"] = pd.to_numeric(df["value"], errors="coerce")
+    logging.info(f"Hiii {df.dtypes=}")
+
 
     blobs_to_consider = await upload_grouped_as_parquet(container_client, df, read_from)
 
