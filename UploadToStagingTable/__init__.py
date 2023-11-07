@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from utils.azure_blob import download_blob_into_stream, get_backfilling_container_client
@@ -24,5 +25,6 @@ async def main(inputParameters: dict) -> str:
 
 def prepare_dataframe(df: pd.DataFrame):
     df = df[["ts", "signal_id", "value"]]
+    df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df = df.dropna()
     return df

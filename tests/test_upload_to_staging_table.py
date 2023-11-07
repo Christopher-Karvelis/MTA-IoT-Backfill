@@ -16,4 +16,11 @@ class TestUploadToStagingTable:
         assert len(result.columns) == 3
         assert len(result) == 1
 
-
+    def test_filters_infinities(self):
+        df = pd.DataFrame(
+            {"ts": pd.to_datetime(["2022-10-10", "2022-10-11", "2022-10-11"]),
+             "signal_id": [1, 2, 3],
+             "value": [23.1, np.inf, -np.inf],
+             "control_system_identifier": ["some sht", "cmon", "wat"]})
+        result = prepare_dataframe(df)
+        assert len(result) == 1
