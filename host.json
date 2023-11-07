@@ -16,7 +16,7 @@
   "extensions": {
     "durableTask": {
       "maxConcurrentActivityFunctions": 1,
-      "hubName": "TaskHubV2"
+      "hubName": "TaskHubV3"
     }
   }
 }
