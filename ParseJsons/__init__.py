@@ -1,3 +1,4 @@
+import asyncio
 from typing import List
 
 import pandas as pd
@@ -40,9 +41,9 @@ def prepare_dataframe(df: pd.DataFrame, signal_hash_table: dict):
 
 
 def turn_result_tuple_into_dataframe(result_tuple):
-    # this feels hacky because it is
     df = pd.read_json(result_tuple[1])
     df["source"] = result_tuple[0]
+    df["measurement_value"] = pd.to_numeric(df["measurement_value"], errors="coerce")
     return df
 
 
