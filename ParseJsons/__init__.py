@@ -22,8 +22,8 @@ async def main(inputParameters: dict) -> List[str]:
 
     df = turn_result_into_dataframe(raw_data)
 
-    # this is blocking and takes a long time, that is no bueno for async
-    df = prepare_dataframe(df, signal_hash_table)
+    event_loop = asyncio.get_event_loop()
+    df = await event_loop.run_in_executor(None, prepare_dataframe, df, signal_hash_table)
 
     blobs_to_consider = await upload_grouped_as_parquet(container_client, df, read_from)
 
