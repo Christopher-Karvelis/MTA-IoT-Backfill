@@ -1,3 +1,5 @@
+from unittest.mock import ANY
+
 import pytest
 
 from Orchestrator import (orchestrator_function,
@@ -28,12 +30,13 @@ class TestOrchestrator:
         next(gen_orchestrator)
         gen_orchestrator.send(["Success", "Success"])
 
-        mock_context.call_activity.assert_any_call(
+        mock_context.call_activity_with_retry.assert_any_call(
             "ParseJsons",
             input_={
                 "ts_end": "2022-01-01T01:00:00",
                 "ts_start": "2022-01-01T00:00:00",
             },
+            retry_options=ANY
         )
 
     def test_calls_decompress_backfill_for_appropriate_days(
