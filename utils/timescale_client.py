@@ -88,6 +88,7 @@ class TimeScaleClient:
                                 SELECT * from {staging_table_name}
                                 ON CONFLICT DO NOTHING;
                             CALL run_job(compression_job_id);
+                            COMMIT;
                             PERFORM alter_job(compression_job_id, scheduled => true);
                         END
                         $BODY$
