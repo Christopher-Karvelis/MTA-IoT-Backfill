@@ -46,6 +46,10 @@ class TimeScaleClient:
         finally:
             await self.connection.close()
 
+    async def hack_unclosing_connect(self):
+        self.connection = await asyncpg.connect(self.uri)
+
+
     async def create_staging_table(self, day_to_backfill):
         day_after_day_to_backfill = _produce_day_after_day_to_backfill(day_to_backfill)
         staging_table_name = _produce_staging_table_name(day_to_backfill)
