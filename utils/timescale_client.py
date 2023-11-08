@@ -83,8 +83,8 @@ class TimeScaleClient:
                             INSERT INTO {destination_table_name}
                                 SELECT * from {staging_table_name}
                                 ON CONFLICT DO NOTHING;
-                            PERFORM alter_job(compression_job_id, scheduled => false);
                             CALL run_job(compression_job_id);
+                            PERFORM alter_job(compression_job_id, scheduled => true);
                         END
                         $BODY$
                         """
