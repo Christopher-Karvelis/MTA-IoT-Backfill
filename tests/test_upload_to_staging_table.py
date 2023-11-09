@@ -16,6 +16,16 @@ class TestUploadToStagingTable:
         assert len(result.columns) == 3
         assert len(result) == 1
 
+    def test_filters_nan_in_signal_id_and_drops_columns(self):
+        df = pd.DataFrame(
+            {"ts": pd.to_datetime(["2022-10-10", "2022-10-11", "2022-10-12"]),
+             "signal_id": [1, 2, np.NAN],
+             "value": [23.1, np.NAN, 23],
+             "control_system_identifier": ["some sht", "cmon", "cmoncmon"]})
+        result = prepare_dataframe(df)
+        assert len(result.columns) == 3
+        assert len(result) == 1
+
     def test_filters_infinities(self):
         df = pd.DataFrame(
             {"ts": pd.to_datetime(["2022-10-10", "2022-10-11", "2022-10-11"]),
