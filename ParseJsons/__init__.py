@@ -2,6 +2,7 @@ import asyncio
 import logging
 from typing import List
 
+import numpy as np
 import pandas as pd
 
 from ParseJsons.download_data import load_one_hour_of_data_starting_at
@@ -39,7 +40,7 @@ async def main(inputParameters: dict) -> List[str]:
 def prepare_dataframe(df: pd.DataFrame, signal_hash_table: dict):
     df["hash_key"] = df["control_system_identifier"] + df["plant"]
     df["hash_key"] = df["hash_key"].str.replace("KWI-WHA", "KWI")
-    df["signal_id"] = df["hash_key"].map(lambda x: signal_hash_table[x])
+    df["signal_id"] = df["hash_key"].map(lambda x: signal_hash_table.get(x, np.nan))
     df.drop(columns=["hash_key"], inplace=True)
     df = df.rename(columns={"measurement_value": "value"})
     df["ts"] = pd.to_datetime(df["ts"])
