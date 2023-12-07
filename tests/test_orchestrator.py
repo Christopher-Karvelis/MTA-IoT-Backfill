@@ -2,7 +2,7 @@ from unittest.mock import ANY
 
 import pytest
 
-from Orchestrator import (orchestrator_function,
+from JsonToParquetOrchestrator import (orchestrator_function,
                           produce_grouped_and_filtered_inputs)
 
 
