@@ -3,7 +3,7 @@ import logging
 import azure.functions as func
 from typing import Dict
 import azure.durable_functions as df
-from InitializeSignalHashTable.signal_client import SignalClient
+from signal_client import SignalClient
 from utils.azure_blob import get_backfilling_container_client
 from utils.signal_hash_table import SignalHashTablePersistence
 
@@ -35,7 +35,7 @@ def json_to_parquet_orchestrator(context: df.DurableOrchestrationContext):
 
 
 
-@app.route(route="orchestrators/{functionName}") 
+@app.route(methods=["post"], route="orchestrators/{functionName}") 
 @app.durable_client_input(client_name="client")
 async def http_start(req: func.HttpRequest, client) -> func.HttpResponse:
     try:
