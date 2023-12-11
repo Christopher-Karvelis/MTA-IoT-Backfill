@@ -4,7 +4,7 @@ import azure.functions as func
 import azure.durable_functions as df
 
 from typing import Dict
-from signal_client import SignalClient
+from signal_hashtable.signal_client import SignalClient
 from shared_assets.input_structure import InputParameters
 from shared_assets.azure_blob import get_backfilling_container_client
 from signal_hashtable.signal_hash_table import SignalHashTablePersistence
