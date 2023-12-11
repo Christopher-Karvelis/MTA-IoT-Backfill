@@ -3,19 +3,19 @@ import json
 import numpy as np
 import pandas as pd
 
-from ParseJsons import turn_result_tuple_into_dataframe, prepare_dataframe
+from shared_assets import helpers
 
 
 class TestParseJsons:
 
     def test_turn_result_tuple_into_dataframe_add_origin_information(self):
-        result_df = turn_result_tuple_into_dataframe(
+        result_df = helpers.turn_result_tuple_into_dataframe(
             ("my_origin", json.dumps([{"measurement_value": 0, "ts": "2022-10-10"}])))
 
         assert result_df["source"][0] == "my_origin"
 
     def test_turn_result_tuple_into_dataframe_coerces_numeric(self):
-        result_df = turn_result_tuple_into_dataframe(
+        result_df = helpers.turn_result_tuple_into_dataframe(
             ("my_origin", json.dumps(
                 [{"measurement_value": 0, "ts": "2022-10-10"},
                  {"measurement_value": "wat", "ts": "2022-11-11"},
@@ -32,7 +32,7 @@ class TestParseJsons:
                               "ts": pd.to_datetime(["2022-10-10", "2022-10-11"])
                               })
         signal_hash_table = {"ide1plant": 1, "ide2plant": 3}
-        result = prepare_dataframe(my_df, signal_hash_table)
+        result = helpers.prepare_signal_dataframe(my_df, signal_hash_table)
         np.testing.assert_array_equal(result["signal_id"].values, [1, 3])
 
     def test_prepare_dataframe_can_deal_with_non_existing_hash_hit(self):
@@ -42,5 +42,5 @@ class TestParseJsons:
                               "ts": pd.to_datetime(["2022-10-10", "2022-10-11", "2022-10-12"])
                               })
         signal_hash_table = {"ide1plant": 1, "ide2plant": 3}
-        result = prepare_dataframe(my_df, signal_hash_table)
+        result = helpers.prepare_signal_dataframe(my_df, signal_hash_table)
         np.testing.assert_array_equal(result["signal_id"].values, [1, 3, np.nan])

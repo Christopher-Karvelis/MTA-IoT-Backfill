@@ -19,7 +19,7 @@
     },
     "durableTask": {
       "maxConcurrentActivityFunctions": 1,
-      "hubName": "TaskHubPythonV2Model"
+      "hubName": "TaskHubPythonV3Model"
     }
   }
 }

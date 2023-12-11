@@ -1,10 +1,7 @@
 from unittest.mock import ANY
-
 import pytest
-
-from JsonToParquetOrchestrator import (orchestrator_function,
-                          produce_grouped_and_filtered_inputs)
-
+from shared_assets import helpers
+from signal_hashtable.initialize_signal_hashtable import initialize_signal_hashtable_orchestrator
 
 @pytest.fixture
 def nested_list_of_blob_names():
@@ -26,7 +23,7 @@ class TestOrchestrator:
             "ts_end": "2022-01-01T01:00:00",
         }
 
-        gen_orchestrator = orchestrator_function(mock_context)
+        gen_orchestrator = initialize_signal_hashtable_orchestrator(mock_context)
         next(gen_orchestrator)
         gen_orchestrator.send(["Success", "Success"])
 
@@ -48,7 +45,7 @@ class TestOrchestrator:
             "ts_end": "2022-01-02T01:00:00",
         }
 
-        gen_orchestrator = orchestrator_function(mock_context)
+        gen_orchestrator = helpers.orchestrator_function(mock_context)
         next(gen_orchestrator)
         next(gen_orchestrator)
         gen_orchestrator.send(nested_list_of_blob_names)
@@ -64,7 +61,7 @@ class TestOrchestrator:
         assert mock_context.call_sub_orchestrator.call_count == 3
 
     def test_can_group_nested_list_of_blob_names(self, nested_list_of_blob_names):
-        grouped = produce_grouped_and_filtered_inputs(
+        grouped = helpers.produce_grouped_and_filtered_inputs(
             {
                 "ts_start": "2000-01-01T00:00:00",
                 "ts_end": "2100-01-01T01:00:00",
@@ -94,7 +91,7 @@ class TestOrchestrator:
         } in grouped
 
     def test_can_filter_based_on_ts_start_and_end(self, nested_list_of_blob_names):
-        grouped = produce_grouped_and_filtered_inputs(
+        grouped = helpers.produce_grouped_and_filtered_inputs(
             {
                 "ts_start": "2022-01-01T00:00:00",
                 "ts_end": "2022-01-02T00:00:00",

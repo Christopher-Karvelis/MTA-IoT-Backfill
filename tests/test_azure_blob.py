@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from utils.azure_blob import _produce_parquet_bytes
+from shared_assets.azure_blob import _produce_parquet_bytes
 
 
 class TestAzureBlob:
