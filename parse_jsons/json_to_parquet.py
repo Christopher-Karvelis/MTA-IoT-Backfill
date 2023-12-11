@@ -8,9 +8,9 @@ import azure.durable_functions as df
 from typing import List, Dict
 from shared_assets import helpers
 from shared_assets.input_structure import InputParameters
-from ParseJsons.upload_data import upload_grouped_as_parquet
+from parse_jsons.upload_data import upload_grouped_as_parquet
 from shared_assets.azure_blob import get_backfilling_container_client
-from ParseJsons.download_data import load_one_hour_of_data_starting_at
+from parse_jsons.download_data import load_one_hour_of_data_starting_at
 from signal_hashtable.signal_hash_table import SignalHashTablePersistence
 
 

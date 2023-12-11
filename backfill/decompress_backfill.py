@@ -14,9 +14,9 @@ from shared_assets.timescale_client import TimeScaleClient
 
 bp = df.Blueprint() 
 
-@bp.route(methods=["post"], route="orchestrators/initialize_signal_hashtable") 
+@bp.route(methods=["post"], route="orchestrators/backfill") 
 @bp.durable_client_input(client_name="client")
-async def http_start_signal_hashtable(req: func.HttpRequest, client) -> func.HttpResponse:
+async def http_backfill(req: func.HttpRequest, client) -> func.HttpResponse:
     try:
         req_body: Dict = req.get_json()
         input_parameters = InputParameters(**req_body)
