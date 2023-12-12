@@ -1,6 +1,5 @@
 import pandas as pd
 import pytest
-
 from shared_assets.azure_blob import _produce_parquet_bytes
 
 
@@ -18,4 +17,3 @@ class TestAzureBlob:
         bytes = await _produce_parquet_bytes(df)
         df_read = pd.read_parquet(bytes)
         assert len(df_read) == 4
-

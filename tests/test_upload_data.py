@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from ParseJsons import upload_data
+from parse_jsons import upload_data
 
 
 class TestGrouping:

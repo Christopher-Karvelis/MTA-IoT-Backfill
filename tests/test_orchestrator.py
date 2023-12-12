@@ -1,7 +1,9 @@
-from unittest.mock import ANY
 import pytest
+from unittest.mock import ANY
 from shared_assets import helpers
-from signal_hashtable.initialize_signal_hashtable import initialize_signal_hashtable_orchestrator
+from parse_jsons.json_to_parquet import json_to_parquet_orchestrator
+from backfill.decompress_backfill import backfill_orchestrator
+
 
 @pytest.fixture
 def nested_list_of_blob_names():
@@ -23,12 +25,12 @@ class TestOrchestrator:
             "ts_end": "2022-01-01T01:00:00",
         }
 
-        gen_orchestrator = initialize_signal_hashtable_orchestrator(mock_context)
+        gen_orchestrator = json_to_parquet_orchestrator(mock_context)
         next(gen_orchestrator)
         gen_orchestrator.send(["Success", "Success"])
 
         mock_context.call_activity_with_retry.assert_any_call(
-            "ParseJsons",
+            "json_to_parquet_orchestrator",
             input_={
                 "ts_end": "2022-01-01T01:00:00",
                 "ts_start": "2022-01-01T00:00:00",
@@ -45,7 +47,7 @@ class TestOrchestrator:
             "ts_end": "2022-01-02T01:00:00",
         }
 
-        gen_orchestrator = helpers.orchestrator_function(mock_context)
+        gen_orchestrator = backfill_orchestrator(mock_context)
         next(gen_orchestrator)
         next(gen_orchestrator)
         gen_orchestrator.send(nested_list_of_blob_names)
