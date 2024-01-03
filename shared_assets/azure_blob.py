@@ -14,9 +14,9 @@ def get_backfilling_container_client():
 
 def get_source_container_client():
     blob_service_client = BlobServiceClient.from_connection_string(
-        os.getenv("SOURCE_STORAGE_ACCOUNT_CONNECTION_STRING")
+        os.getenv("AzureWebJobsStorage")
     )
-    return blob_service_client.get_container_client("axh-opcpublisher")
+    return blob_service_client.get_container_client("stage-recovery")
 
 
 async def download_string_blob(blob_name, container_client):

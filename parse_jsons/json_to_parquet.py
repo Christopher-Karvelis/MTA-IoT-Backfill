@@ -41,19 +41,7 @@ async def http_json_to_parquet(req: func.HttpRequest, client) -> func.HttpRespon
 
 @bp.orchestration_trigger(context_name="context")
 def json_to_parquet_orchestrator(context: df.DurableOrchestrationContext):
-    user_input = context.get_input()
-    chunked_timespan = helpers.chunk_timespan(user_input)
-
-    json_to_parquet_tasks = [
-        context.call_activity_with_retry(
-            "parse_jsons",
-            retry_options=RETRY_ONCE_A_MINUTE_THREE_TIMES,
-            input_={**user_input, **timespan},
-        )
-        for timespan in chunked_timespan
-    ]
-    blobs_to_consider = yield context.task_all(json_to_parquet_tasks)
-    return blobs_to_consider
+    return json_to_parquet_orchestrator1(context=context)
 
 @bp.activity_trigger(input_name="inputParameters")
 async def parse_jsons(inputParameters: dict) -> List[str]:
@@ -78,4 +66,19 @@ async def parse_jsons(inputParameters: dict) -> List[str]:
 
     blobs_to_consider = await upload_grouped_as_parquet(container_client, df, read_from)
 
+    return blobs_to_consider
+
+def json_to_parquet_orchestrator1(context: df.DurableOrchestrationContext):
+    user_input = InputParameters(**context.get_input())
+    chunked_timespan = helpers.chunk_timespan(user_input)
+
+    json_to_parquet_tasks = [
+        context.call_activity_with_retry(
+            "parse_jsons",
+            retry_options=RETRY_ONCE_A_MINUTE_THREE_TIMES,
+            input_={**user_input.__dict__, **timespan},
+        )
+        for timespan in chunked_timespan
+    ]
+    blobs_to_consider = yield context.task_all(json_to_parquet_tasks)
     return blobs_to_consider

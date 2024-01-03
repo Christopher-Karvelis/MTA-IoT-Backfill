@@ -2,20 +2,19 @@ import datetime
 import numpy as np
 import pandas as pd
 
-def _convert_timespan_to_datetimes(timespan):
-    datetime_from = datetime.datetime.fromisoformat(timespan["ts_start"])
-    datetime_to = datetime.datetime.fromisoformat(timespan["ts_end"])
+from shared_assets.input_structure import BackFillInputParameters, InputParameters
+
+def _convert_timespan_to_datetimes(ts_start, ts_end):
+    datetime_from = datetime.datetime.fromisoformat(ts_start)
+    datetime_to = datetime.datetime.fromisoformat(ts_end)
     return datetime_from, datetime_to
 
 
 
-def produce_grouped_and_filtered_inputs(user_input):
-    datetime_from, datetime_to = _convert_timespan_to_datetimes(user_input["timespan"])
-    blobs_to_consider_flat = [
-        blob_name for blobs in user_input["blobs_to_consider"] for blob_name in blobs
-    ]
+def produce_grouped_and_filtered_inputs(user_input: BackFillInputParameters):
+    datetime_from, datetime_to = _convert_timespan_to_datetimes(ts_start=user_input.ts_start, ts_end=user_input.ts_end)
     date_parts = set(
-        date_part.split("/_from_")[0] for date_part in blobs_to_consider_flat
+        date_part.split("/_from_")[0] for date_part in user_input.blobs_to_consider
     )
     date_parts_within_timespan = [
         day
@@ -28,7 +27,7 @@ def produce_grouped_and_filtered_inputs(user_input):
         {
             "day_to_backfill": date_part,
             "blob_names": [
-                item for item in blobs_to_consider_flat if item.startswith(date_part)
+                item for item in user_input.blobs_to_consider if item.startswith(date_part)
             ],
         }
         for date_part in date_parts_within_timespan
@@ -37,10 +36,10 @@ def produce_grouped_and_filtered_inputs(user_input):
     return assembled_with_blob_names
 
 def chunk_timespan(
-        timespan,
+        user_input: InputParameters,
         chunk_size_in_hours=1,
 ):
-    datetime_from, datetime_to = _convert_timespan_to_datetimes(timespan)
+    datetime_from, datetime_to = _convert_timespan_to_datetimes(ts_start=user_input.ts_start, ts_end=user_input.ts_end)
     interval = datetime.timedelta(hours=chunk_size_in_hours)
     periods = []
     period_start = datetime_from

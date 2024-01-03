@@ -7,7 +7,7 @@ import azure.durable_functions as df
 from typing import Dict
 from shared_assets import azure_blob
 from shared_assets import helpers
-from shared_assets.input_structure import InputParameters
+from shared_assets.input_structure import BackFillInputParameters
 from shared_assets.timescale_client import TimeScaleClient
 
 
@@ -19,7 +19,7 @@ bp = df.Blueprint()
 async def http_backfill(req: func.HttpRequest, client) -> func.HttpResponse:
     try:
         req_body: Dict = req.get_json()
-        input_parameters = InputParameters(**req_body)
+        input_parameters = BackFillInputParameters(**req_body)
         logging.info(input_parameters)
     except ValueError:
         logging.error(f"JSON could not be read from body: {req.get_body().decode()}")
@@ -35,18 +35,7 @@ async def http_backfill(req: func.HttpRequest, client) -> func.HttpResponse:
 
 @bp.orchestration_trigger(context_name="context")
 def backfill_orchestrator(context: df.DurableOrchestrationContext):
-    days_and_backfill_information = helpers.produce_grouped_and_filtered_inputs(
-        user_input=context.get_input()
-    )
-
-    backfill_tasks = [
-        context.call_sub_orchestrator("backfill_sub_orchestrator", day_and_blobs)
-        for day_and_blobs in days_and_backfill_information
-    ]
-
-    yield context.task_all(backfill_tasks)
-
-    return "Success"
+    return backfill_orchestrator_concrete(context=context)
 
 
 @bp.orchestration_trigger(context_name="context")
@@ -122,4 +111,19 @@ async def upload_to_staging_table(inputParameters: dict) -> str:
         table_name=inputParameters["staging_table_name"],
         data=list(df.itertuples(index=False, name=None)),
     )
+    return "Success"
+
+def backfill_orchestrator_concrete(context: df.DurableOrchestrationContext):
+    print("hi!!!!!!!!!!!!!!!!!!!!!!!!")
+    days_and_backfill_information = helpers.produce_grouped_and_filtered_inputs(
+        user_input=BackFillInputParameters(**context.get_input())
+    )
+
+    backfill_tasks = [
+        context.call_sub_orchestrator("backfill_sub_orchestrator", day_and_blobs)
+        for day_and_blobs in days_and_backfill_information
+    ]
+
+    yield context.task_all(backfill_tasks)
+
     return "Success"
