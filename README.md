@@ -31,3 +31,32 @@ For postman requests you need the github token. Open a terminal in visual studio
     echo $GITHUB_TOKEN 
 
 copy the token and add it in your postman request as a Header with key= "X-GITHUB-TOKEN" and value="the copied token"
+
+# Triggering the apis with postman
+First you need to create the signal hashtable:
+
+    POST: https://{host}/orchestrators/initialize_signal_hashtable
+    body: 
+        {"ts_start": "2023-11-05T00:00:00+00:00", "ts_end": "2023-11-06T00:00:00+00:00"}
+
+
+Then we need to create the parquet files for the json files of interest 
+
+
+    POST: https://{host}/orchestrators/json_to_parquet
+    body: 
+        {"ts_start": "2023-11-05T00:00:00+00:00", "ts_end": "2023-11-06T00:00:00+00:00"}
+
+Finaly we need to trigger the backfill function:
+
+    POST: https://{host}/orchestrators/backfill
+
+    body:
+    {
+        "ts_start": "2023-11-05T00:00:00",
+        "ts_end": "2023-11-07T00:00:00",
+        "blobs_to_consider": ["2023-11-06/_from_2023-11-07/18", "2023-11-06/_from_2023-11-07/23"]
+    }
+    
+"blobs_to_consider" contains the new blobs created that contain the parquet files created in the previous request
+
